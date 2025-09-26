@@ -31,8 +31,8 @@ class ArrayType(Enum):
 
     ILLUMINA_27K = "27k"
     ILLUMINA_450K = "450k"
-    ILLUMINA_EPIC = "epic"
-    ILLUMINA_EPIC_V2 = "epicv2"
+    ILLUMINA_EPIC = "epic_v1"
+    ILLUMINA_EPIC_V2 = "epic_v2"
     ILLUMINA_MSA48 = "msa48"
     ILLUMINA_MOUSE = "mouse"
     CNQUANT_COMBINED = "cnquant"
