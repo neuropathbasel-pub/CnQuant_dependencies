@@ -11,6 +11,13 @@ class Unsupported_array_type(Exception):
         self.array_type = array_type
         super().__init__(self.message)
 
+class MixedArrayTypesInReferenceData(Exception):
+    """Reports errors related to missing idat files"""
+    def __init__(self, message="Mixed array types in reference data"):
+        self.message = message
+
+        super().__init__(self.message)       
+
 class Failure_to_load_reference_data(Exception):
     """Reports errors related to loading reference data"""
     def __init__(self, error: str):
