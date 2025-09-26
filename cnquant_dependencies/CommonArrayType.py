@@ -28,9 +28,9 @@ class CommonArrayType(Enum):
             raise ValueError(f"Unknown CommonArrayType value: {convert_from_to}")
 
     @classmethod
-    def value_to_key_mapping(cls, array_types: list[ArrayType]) -> dict[str, str]:
+    def value_to_key_mapping(cls, common_array_types: list["CommonArrayType"]) -> dict[str, str]:
         """Returns a dict mapping ArrayType values to their enum names (keys)."""
-        return {at.value: at.name for at in array_types}
+        return {at.value: at.name for at in common_array_types}
     
     @classmethod
     def members_list(cls) -> Sequence["CommonArrayType"]:
