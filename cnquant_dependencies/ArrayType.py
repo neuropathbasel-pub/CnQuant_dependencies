@@ -2,6 +2,7 @@
 
 from enum import Enum, unique
 from pathlib import Path
+from typing import cast, Sequence
 from .IdatParser import IdatParser
 
 
@@ -79,11 +80,16 @@ class ArrayType(Enum):
     @classmethod
     def from_idat(cls, path):
         """Infers array type from idat_file."""
-        valid_path = _find_valid_path(path)
-        probe_count = IdatParser(valid_path, array_type_only=True).n_snps_read
-        return ArrayType.from_probe_count(probe_count)
+        valid_path = _find_valid_path(path=path)
+        probe_count = IdatParser(file_path=valid_path, array_type_only=True).n_snps_read
+        return ArrayType.from_probe_count(probe_count=probe_count)
     
     @classmethod
     def value_to_key_mapping(cls, array_types: list["ArrayType"]) -> dict[str, str]:
         """Returns a dict mapping ArrayType values to their enum names (keys)."""
         return {at.value: at.name for at in array_types}
+    
+    @classmethod
+    def members_list(cls) -> Sequence["ArrayType"]:
+        """Returns a list of all CommonArrayType enum members."""
+        return cast(Sequence["ArrayType"], list(cls._member_map_.values()))

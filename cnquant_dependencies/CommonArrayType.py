@@ -1,5 +1,6 @@
 from enum import Enum, unique
 from .ArrayType import ArrayType
+from typing import Sequence, cast
 # TODO: Make the enum more understandable
 @unique
 class CommonArrayType(Enum):
@@ -30,3 +31,9 @@ class CommonArrayType(Enum):
     def value_to_key_mapping(cls, array_types: list[ArrayType]) -> dict[str, str]:
         """Returns a dict mapping ArrayType values to their enum names (keys)."""
         return {at.value: at.name for at in array_types}
+    
+    @classmethod
+    def members_list(cls) -> Sequence["CommonArrayType"]:
+        """Returns a list of all CommonArrayType enum members."""
+        return cast(Sequence["CommonArrayType"], list(cls._member_map_.values()))
+
