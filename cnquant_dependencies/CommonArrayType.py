@@ -1,6 +1,6 @@
 from enum import Enum, unique
 from .ArrayType import ArrayType
-
+# TODO: Make the enum more understandable
 @unique
 class CommonArrayType(Enum):
     """Provides constants lists for the final downsized array type."""
