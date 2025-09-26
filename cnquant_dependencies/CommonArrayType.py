@@ -8,15 +8,15 @@ class CommonArrayType(Enum):
     EPIC_v2_to_MSA48 = "EPIC_v2_to_MSA48"
 
     @classmethod
-    def get_array_types(cls, smallest_array: "CommonArrayType") -> list[ArrayType]:
+    def get_array_types(cls, convert_from_to: "CommonArrayType") -> list[ArrayType]:
         """Returns the list of ArrayType instances for the given CommonArrayType enum value."""
-        if smallest_array == cls.EPIC_v2_to_HM450K:
+        if convert_from_to == cls.EPIC_v2_to_HM450K:
             return [
                 ArrayType.ILLUMINA_450K,
                 ArrayType.ILLUMINA_EPIC,
                 ArrayType.ILLUMINA_EPIC_V2,
             ]
-        elif smallest_array == cls.EPIC_v2_to_MSA48:
+        elif convert_from_to == cls.EPIC_v2_to_MSA48:
             return [
                 ArrayType.ILLUMINA_MSA48,
                 ArrayType.ILLUMINA_450K,
@@ -24,7 +24,7 @@ class CommonArrayType(Enum):
                 ArrayType.ILLUMINA_EPIC_V2,
             ]
         else:
-            raise ValueError(f"Unknown CommonArrayType value: {smallest_array}")
+            raise ValueError(f"Unknown CommonArrayType value: {convert_from_to}")
 
     @classmethod
     def value_to_key_mapping(cls, array_types: list[ArrayType]) -> dict[str, str]:
