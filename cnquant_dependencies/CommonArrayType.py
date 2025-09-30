@@ -69,9 +69,28 @@ class CommonArrayType(Enum):
         """Returns a list of all CommonArrayType enum members."""
         return cast(Sequence["CommonArrayType"], list(cls._member_map_.values()))
 
+    @classmethod
+    def get_member_from_string(cls, value: str) -> "CommonArrayType":
+        """Returns the CommonArrayType enum member corresponding to the given value string.
+        
+        Args:
+            value (str): The string value of the enum member (e.g., "NO_DOWNSIZING").
+            
+        Returns:
+            CommonArrayType: The matching enum member.
+            
+        Raises:
+            ValueError: If no enum member matches the provided value.
+        """
+        try:
+            return cls(value)
+        except ValueError:
+            raise ValueError(f"Invalid value '{value}' for CommonArrayType. Valid values are: {[member.value for member in cls]}")
+
+
 
 if __name__ == "__main__":
-    print(CommonArrayType.is_convertible_to(array_type=ArrayType.ILLUMINA_MSA48,convert_from_to=CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48))
+    print(CommonArrayType.get_member_from_string(value="EPIC_v2_EPIC_v1_to_HM450K"))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.members_list()))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K))
     # print(CommonArrayType.get_array_types(CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48))
