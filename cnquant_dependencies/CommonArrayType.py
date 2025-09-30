@@ -45,6 +45,19 @@ class CommonArrayType(Enum):
         else:
             raise ValueError(f"No conversion available for ArrayType value: {array_type}")
         
+    @classmethod
+    def is_convertible_to(cls, array_type: ArrayType, convert_from_to: "CommonArrayType") -> bool:
+        """Returns the list of CommonArrayType enum values that allow conversion from the given ArrayType."""
+        if array_type not in ArrayType.valid_array_types():
+            raise ValueError(f"Unknown ArrayType value: {array_type}")
+        
+        if (array_type in cls.get_array_types(convert_from_to=cls.EPIC_v2_EPIC_v1_to_HM450K) and convert_from_to == cls.EPIC_v2_EPIC_v1_to_HM450K):
+            return True
+        elif array_type == ArrayType.ILLUMINA_MSA48 and convert_from_to == cls.EPIC_v2_EPIC_v1_HM450_to_MSA48:
+            return True
+        else:
+            return False
+        
 
     @classmethod
     def value_to_key_mapping(cls, common_array_types: list["CommonArrayType"]) -> dict[str, str]:
@@ -58,7 +71,7 @@ class CommonArrayType(Enum):
 
 
 if __name__ == "__main__":
-    print(CommonArrayType.value_to_key_mapping([CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48]))
+    print(CommonArrayType.is_convertible_to(array_type=ArrayType.ILLUMINA_MSA48,convert_from_to=CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.members_list()))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K))
     # print(CommonArrayType.get_array_types(CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48))
