@@ -5,6 +5,7 @@ from typing import Sequence, cast
 @unique
 class CommonArrayType(Enum):
     """Provides constants lists for the final downsized array type."""
+    NO_DOWNSIZING = "NO_DOWNSIZING"
     EPIC_v2_EPIC_v1_to_HM450K = "EPIC_v2_EPIC_v1_to_HM450K"
     EPIC_v2_EPIC_v1_HM450_to_MSA48 = "EPIC_v2_EPIC_v1_HM450_to_MSA48"
 
