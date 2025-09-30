@@ -1,5 +1,5 @@
 from enum import Enum, unique
-from .ArrayType import ArrayType
+from cnquant_dependencies.ArrayType import ArrayType
 from typing import Sequence, cast
 # TODO: Make the enum more understandable
 @unique
@@ -27,6 +27,24 @@ class CommonArrayType(Enum):
             ]
         else:
             raise ValueError(f"Unknown CommonArrayType value: {convert_from_to}")
+        
+    @classmethod
+    def may_be_converted_to(cls, array_type: ArrayType) -> list["CommonArrayType"]:
+        """Returns the list of CommonArrayType enum values that allow conversion from the given ArrayType."""
+        if array_type not in ArrayType.valid_array_types():
+            raise ValueError(f"Unknown ArrayType value: {array_type}")
+        
+        if array_type in cls.get_array_types(cls.EPIC_v2_EPIC_v1_to_HM450K):
+            return [
+                cls.EPIC_v2_EPIC_v1_to_HM450K,
+            ]
+        elif array_type == ArrayType.ILLUMINA_MSA48:
+            return [
+                cls.EPIC_v2_EPIC_v1_HM450_to_MSA48,
+            ]
+        else:
+            raise ValueError(f"No conversion available for ArrayType value: {array_type}")
+        
 
     @classmethod
     def value_to_key_mapping(cls, common_array_types: list["CommonArrayType"]) -> dict[str, str]:
@@ -38,3 +56,9 @@ class CommonArrayType(Enum):
         """Returns a list of all CommonArrayType enum members."""
         return cast(Sequence["CommonArrayType"], list(cls._member_map_.values()))
 
+
+if __name__ == "__main__":
+    print(CommonArrayType.value_to_key_mapping([CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48]))
+    # print(CommonArrayType.value_to_key_mapping(CommonArrayType.members_list()))
+    # print(CommonArrayType.value_to_key_mapping(CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K))
+    # print(CommonArrayType.get_array_types(CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48))
