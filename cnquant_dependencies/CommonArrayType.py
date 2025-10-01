@@ -1,6 +1,23 @@
 from enum import Enum, unique
 from cnquant_dependencies.ArrayType import ArrayType
-from typing import Sequence, cast
+from typing import Sequence, cast, Union
+
+def map_array_types_to_human_readable_name(array_type: ArrayType) -> str:
+    array_names = {
+        ArrayType.ILLUMINA_450K: "HM450K",
+        ArrayType.ILLUMINA_EPIC: "EPIC v1",
+        ArrayType.ILLUMINA_EPIC_V2: "EPIC v2",
+        ArrayType.ILLUMINA_MSA48: "MSA-48",
+        ArrayType.ILLUMINA_27K: "27K",
+        ArrayType.ILLUMINA_MOUSE: "Mouse",
+        ArrayType.UNKNOWN: "Unknown",
+    }
+    if array_type not in array_names:
+        raise ValueError(f"Unknown ArrayType value: {array_type}")
+    return array_names[array_type]
+
+
+
 # TODO: Make the enum more understandable
 @unique
 class CommonArrayType(Enum):
@@ -10,21 +27,32 @@ class CommonArrayType(Enum):
     EPIC_v2_EPIC_v1_HM450_to_MSA48 = "EPIC_v2_EPIC_v1_HM450_to_MSA48"
 
     @classmethod
-    def get_array_types(cls, convert_from_to: "CommonArrayType") -> list[ArrayType]:
+    def get_array_types(cls, convert_from_to: "CommonArrayType", verbose=False) -> Sequence[Union[str,ArrayType]]:
         """Returns the list of ArrayType instances for the given CommonArrayType enum value."""
+        EPIC_v2_EPIC_v1_to_HM450K_array_types: list[ArrayType] = [
+                ArrayType.ILLUMINA_450K,
+                ArrayType.ILLUMINA_EPIC,
+                ArrayType.ILLUMINA_EPIC_V2,
+            ]
+        EPIC_v2_EPIC_v1_HM450_to_MSA48_array_types: list[ArrayType] = [
+                    ArrayType.ILLUMINA_MSA48,
+                    ArrayType.ILLUMINA_450K,
+                    ArrayType.ILLUMINA_EPIC,
+                    ArrayType.ILLUMINA_EPIC_V2,
+                ]
+
         if convert_from_to == cls.EPIC_v2_EPIC_v1_to_HM450K:
-            return [
-                ArrayType.ILLUMINA_450K,
-                ArrayType.ILLUMINA_EPIC,
-                ArrayType.ILLUMINA_EPIC_V2,
-            ]
+            
+            if verbose:
+                return [map_array_types_to_human_readable_name(array_type_name) for array_type_name in EPIC_v2_EPIC_v1_to_HM450K_array_types]
+            else:
+                return EPIC_v2_EPIC_v1_to_HM450K_array_types
+            
         elif convert_from_to == cls.EPIC_v2_EPIC_v1_HM450_to_MSA48:
-            return [
-                ArrayType.ILLUMINA_MSA48,
-                ArrayType.ILLUMINA_450K,
-                ArrayType.ILLUMINA_EPIC,
-                ArrayType.ILLUMINA_EPIC_V2,
-            ]
+            if verbose:
+                return[map_array_types_to_human_readable_name(array_type_name) for array_type_name in EPIC_v2_EPIC_v1_HM450_to_MSA48_array_types]
+            else:
+                return EPIC_v2_EPIC_v1_HM450_to_MSA48_array_types
         else:
             raise ValueError(f"Unknown CommonArrayType value: {convert_from_to}")
         
@@ -90,7 +118,7 @@ class CommonArrayType(Enum):
 
 
 if __name__ == "__main__":
-    print(CommonArrayType.get_member_from_string(value="EPIC_v2_EPIC_v1_to_HM450K"))
+    print(CommonArrayType.get_array_types(convert_from_to=CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K, verbose=True))  # List of ArrayType
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.members_list()))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K))
     # print(CommonArrayType.get_array_types(CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48))
