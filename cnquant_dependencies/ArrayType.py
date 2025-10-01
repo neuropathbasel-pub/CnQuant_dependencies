@@ -35,6 +35,7 @@ class ArrayType(Enum):
     ILLUMINA_EPIC_V2 = "epic_v2"
     ILLUMINA_MSA48 = "msa48"
     ILLUMINA_MOUSE = "mouse"
+    CNQUANT_COMBINED = "cnquant"
     UNKNOWN = "unknown"
 
     @classmethod
