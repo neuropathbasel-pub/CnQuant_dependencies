@@ -1,8 +1,10 @@
 import polars as pl
 import pandas as pd
 import hashlib
+import pickle
 import zstandard as zstd
 from pathlib import Path
+from typing import Any
 
 def compute_sha256(file_path: Path) -> str:
     """Compute SHA256 checksum of a file."""
@@ -85,3 +87,70 @@ def save_json_plot(json_str, plot_save_path: Path) -> None:
     checksum_path = plot_save_path.with_suffix('.sha256')
     with open(file=checksum_path, mode='w') as f:
         f.write(f"{sha256_hash}  {plot_save_path.name}\n")
+
+################################ Saving and loading manifest objects #########################################
+def save_pickle_with_checksum(obj: Any, file_path: Path) -> None:
+    """
+    Saves an object to a pickle file and generates a SHA256 checksum for verification.
+
+    Args:
+        obj: The Python object to serialize and save.
+        file_path: The path to save the pickle file (e.g., 'data.pkl').
+
+    Raises:
+        Exception: If saving or hashing fails.
+    """
+    # Serialize the object
+    pickle_bytes = pickle.dumps(obj)
+    
+    # Compute SHA256 hash
+    sha256_hash = hashlib.sha256(pickle_bytes).hexdigest()
+    
+    # Save the pickle file
+    with open(file_path, 'wb') as f:
+        f.write(pickle_bytes)
+    
+    # Save the checksum to a .sha256 file
+    checksum_path = file_path.with_suffix('.sha256')
+    with open(checksum_path, 'w') as f:
+        f.write(f"{sha256_hash}  {file_path.name}\n")
+
+def load_pickle_with_checksum(file_path: Path) -> Any:
+    """
+    Loads an object from a pickle file and verifies its SHA256 checksum.
+
+    Args:
+        file_path: The path to the pickle file (e.g., 'data.pkl').
+
+    Returns:
+        The deserialized Python object.
+
+    Raises:
+        FileNotFoundError: If the pickle or checksum file is missing.
+        ValueError: If the checksum does not match.
+        Exception: For other loading or verification errors.
+    """
+    checksum_path = file_path.with_suffix('.sha256')
+    
+    if not file_path.exists():
+        raise FileNotFoundError(f"Pickle file not found: {file_path}")
+    if not checksum_path.exists():
+        raise FileNotFoundError(f"Checksum file not found: {checksum_path}")
+    
+    # Read the pickle file
+    with open(file_path, 'rb') as f:
+        pickle_bytes = f.read()
+    
+    # Compute the hash of the loaded bytes
+    actual_hash = hashlib.sha256(pickle_bytes).hexdigest()
+    
+    # Read the expected hash from the checksum file
+    with open(checksum_path, 'r') as f:
+        expected_hash = f.read().split()[0]
+    
+    # Verify
+    if actual_hash != expected_hash:
+        raise ValueError(f"Checksum mismatch for {file_path}. Expected: {expected_hash}, Got: {actual_hash}")
+    
+    # Deserialize and return
+    return pickle.loads(pickle_bytes)
