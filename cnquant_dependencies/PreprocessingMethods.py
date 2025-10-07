@@ -1,5 +1,5 @@
 from enum import Enum, unique
-from typing import Sequence, cast
+from typing import Sequence, cast, Union
 @unique
 class PreprocessingMethods(Enum):
     "Enum class holding all acceptable preprocessing methods for CnQuant"
@@ -11,6 +11,13 @@ class PreprocessingMethods(Enum):
     @classmethod
     def list(cls):
         return list(cls)
+    
+    @classmethod
+    def get_enum_from_string(cls, value: str) -> Union["PreprocessingMethods", None]:
+        for name, member in cls.__members__.items():
+            if member.value == value.lower():
+                return member
+        return None
     
     @classmethod
     def members_list(cls) -> Sequence[str]:
