@@ -93,9 +93,9 @@ class CommonArrayType(Enum):
         return {at.value: at.name for at in common_array_types}
     
     @classmethod
-    def members_list(cls) -> Sequence["CommonArrayType"]:
-        """Returns a list of all CommonArrayType enum members."""
-        return cast(Sequence["CommonArrayType"], list(cls._member_map_.values()))
+    def members_list(cls) -> Sequence[str]:
+        """Returns a sequence of the string values of all CommonArrayType enum members."""
+        return cast(Sequence[str], [member.value for member in cls])
 
     @classmethod
     def get_member_from_string(cls, value: str) -> "CommonArrayType":
@@ -118,7 +118,8 @@ class CommonArrayType(Enum):
 
 
 if __name__ == "__main__":
-    print(CommonArrayType.get_array_types(convert_from_to=CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K, verbose=True))  # List of ArrayType
+    # print(CommonArrayType.get_array_types(convert_from_to=CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K, verbose=True))  # List of ArrayType
+    print(', '.join(CommonArrayType.members_list()))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.members_list()))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K))
     # print(CommonArrayType.get_array_types(CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48))
