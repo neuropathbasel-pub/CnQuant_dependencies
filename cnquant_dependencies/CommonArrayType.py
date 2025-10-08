@@ -111,15 +111,23 @@ class CommonArrayType(Enum):
             ValueError: If no enum member matches the provided value.
         """
         try:
-            return cls(value.upper())
+            return cls(value)
         except ValueError:
-            raise ValueError(f"Invalid value '{value}' for CommonArrayType. Valid values are: {[member.value for member in cls]}")
+            try:
+                return getattr(cls, value.upper())  # Fallback to by name
+            except AttributeError:
+                valid_values = [member.value for member in cls]
+                valid_names = [member.name for member in cls]
+                raise ValueError(f"Invalid value or name '{value}' for CommonArrayType. Valid values: {valid_values}. Valid names: {valid_names}")
+            except ValueError:
+                raise ValueError(f"Invalid value '{value}' for CommonArrayType. Valid values are: {[member.value for member in cls]}")
 
 
 
 if __name__ == "__main__":
     # print(CommonArrayType.get_array_types(convert_from_to=CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K, verbose=True))  # List of ArrayType
     print(', '.join(CommonArrayType.members_list()))
+    print(CommonArrayType.get_member_from_string(value="EPIC_v2_EPIC_v1_HM450_to_MSA48"))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.members_list()))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K))
     # print(CommonArrayType.get_array_types(CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48))
