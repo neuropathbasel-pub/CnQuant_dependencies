@@ -111,7 +111,7 @@ class CommonArrayType(Enum):
             ValueError: If no enum member matches the provided value.
         """
         try:
-            return cls(value)
+            return cls(value.upper())
         except ValueError:
             raise ValueError(f"Invalid value '{value}' for CommonArrayType. Valid values are: {[member.value for member in cls]}")
 
