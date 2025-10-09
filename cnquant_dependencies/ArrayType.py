@@ -3,7 +3,7 @@
 from enum import Enum, unique
 from pathlib import Path
 from typing import cast, Sequence
-from .IdatParser import IdatParser
+from cnquant_dependencies.IdatParser import IdatParser
 
 
 def _find_valid_path(path):
@@ -86,10 +86,39 @@ class ArrayType(Enum):
     
     @classmethod
     def value_to_key_mapping(cls, array_types: list["ArrayType"]) -> dict[str, str]:
-        """Returns a dict mapping ArrayType values to their enum names (keys)."""
+        f"""Returns a dict mapping {cls.__name__} values to their enum names (keys)."""
         return {at.value: at.name for at in array_types}
     
     @classmethod
     def members_list(cls) -> Sequence["ArrayType"]:
         """Returns a list of all CommonArrayType enum members."""
         return cast(Sequence["ArrayType"], list(cls._member_map_.values()))
+    
+    
+    @classmethod
+    def get_member_from_string(cls, value: str) -> "ArrayType":
+        f"""Returns the {cls.__name__} enum member corresponding to the given value string.
+        
+        Args:
+            value (str): The string value of the enum member (e.g., "450k").
+            
+        Returns:
+            {cls.__name__}: The matching enum member.
+            
+        Raises:
+            ValueError: If no enum member matches the provided value.
+        """
+        try:
+            return cls(value)
+        except ValueError:
+            try:
+                return getattr(cls, value.upper())  # Fallback to by name
+            except AttributeError:
+                valid_values = [member.value for member in cls]
+                valid_names = [member.name for member in cls]
+                raise ValueError(f"Invalid value or name '{value}' for {cls.__name__}. Valid values: {valid_values}. Valid names: {valid_names}")
+            except ValueError:
+                raise ValueError(f"Invalid value '{value}' for {cls.__name__}. Valid values are: {[member.value for member in cls]}")
+
+if __name__ == "__main__":
+    print(ArrayType.__name__)
