@@ -141,40 +141,20 @@ def get_only_processed_sentrix_ids(
     downsize_to: str = CommonArrayType.NO_DOWNSIZING.value,
     logger: logging.Logger = logging.getLogger(name=__name__),
 ) -> list[str]:
-    """Retrieves a list of Sentrix IDs that have been successfully processed based on status JSON files.
-    
-    Args:
-        sentrix_ids_to_check (list[str] | set[str] | None): Optional list or set of Sentrix IDs to filter by. 
-            If None, checks all subdirectories in results_directory.
-        results_directory (Path): The directory containing subdirectories for each Sentrix ID.
-        downsize_to (str): The downsize option for status JSON path generation. Defaults to NO_DOWNSIZING.
-        logger (logging.Logger): Logger for recording warnings/errors.
-    
-    Returns:
-        list[str]: A list of Sentrix IDs that have successful status JSON files.
-    
-    Notes:
-        - Only considers subdirectories in results_directory.
-        - Logs warnings for missing directories or status files but does not raise errors.
-    """
+
     if not results_directory.exists() or not results_directory.is_dir():
         logger.warning(f"Results directory does not exist or is not a directory: {results_directory}")
         return []
     
-    try:
-        all_subdirs = {p.name for p in results_directory.iterdir() if p.is_dir()}
-    except OSError as e:
-        logger.error(f"Error listing subdirectories in {results_directory}: {e}")
-        return []
+    detected_sentrix_ids = set(os.listdir(path=results_directory))
     
     if sentrix_ids_to_check is not None:
-        sentrix_ids_set = set(sentrix_ids_to_check)
-        analyzed_sentrix_ids = all_subdirs & sentrix_ids_set
+        detected_sentrix_ids = detected_sentrix_ids.intersection(set(sentrix_ids_to_check))
     else:
-        analyzed_sentrix_ids = all_subdirs
+        detected_sentrix_ids = detected_sentrix_ids
     
     available_sentrix_ids = [
-        sentrix_id for sentrix_id in analyzed_sentrix_ids
+        sentrix_id for sentrix_id in detected_sentrix_ids
         if check_if_previous_analysis_was_successful(
             status_json_path=get_status_json_path(
                 sentrix_id=sentrix_id,
