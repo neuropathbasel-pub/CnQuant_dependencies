@@ -1,4 +1,5 @@
 import os
+import logging
 from pathlib import Path
 from typing import Optional, Union
 from cnquant_dependencies.enums.CommonArrayType import CommonArrayType
@@ -135,39 +136,53 @@ def sentrix_ids_to_process(
     return current_missing_sentrix_ids
 
 def get_only_processed_sentrix_ids(
-    sentrix_ids_to_process: Union[list[str], set[str]],
+    sentrix_ids_to_check: list[str] | set[str] | None,
     results_directory: Path,
-    preprocessing_method: str,
-    CNV_base_output_directory: Path,
-    bin_size: int,
-    min_probes_per_bin: int,
     downsize_to: str = CommonArrayType.NO_DOWNSIZING.value,
-):
-    bin_settings_string: str = make_bin_settings_string(bin_size=bin_size, min_probes_per_bin=min_probes_per_bin)
-    search_directory: Path = CNV_base_output_directory / preprocessing_method / bin_settings_string
-    analysed_sentrix_ids: list[str] = list(os.listdir(path=search_directory))
-
-    for sentrix_id in analysed_sentrix_ids:
-        sentrix_id_output_directory: Path = search_directory / sentrix_id
-        
-        current_status_json = get_status_json_path(
-            sentrix_id=sentrix_id,
-            sentrix_id_directory=sentrix_id_output_directory,
-            downsize_to=downsize_to,
+    logger: logging.Logger = logging.getLogger(name=__name__),
+) -> list[str]:
+    """Retrieves a list of Sentrix IDs that have been successfully processed based on status JSON files.
+    
+    Args:
+        sentrix_ids_to_check (list[str] | set[str] | None): Optional list or set of Sentrix IDs to filter by. 
+            If None, checks all subdirectories in results_directory.
+        results_directory (Path): The directory containing subdirectories for each Sentrix ID.
+        downsize_to (str): The downsize option for status JSON path generation. Defaults to NO_DOWNSIZING.
+        logger (logging.Logger): Logger for recording warnings/errors.
+    
+    Returns:
+        list[str]: A list of Sentrix IDs that have successful status JSON files.
+    
+    Notes:
+        - Only considers subdirectories in results_directory.
+        - Logs warnings for missing directories or status files but does not raise errors.
+    """
+    if not results_directory.exists() or not results_directory.is_dir():
+        logger.warning(f"Results directory does not exist or is not a directory: {results_directory}")
+        return []
+    
+    try:
+        all_subdirs = {p.name for p in results_directory.iterdir() if p.is_dir()}
+    except OSError as e:
+        logger.error(f"Error listing subdirectories in {results_directory}: {e}")
+        return []
+    
+    if sentrix_ids_to_check is not None:
+        sentrix_ids_set = set(sentrix_ids_to_check)
+        analyzed_sentrix_ids = all_subdirs & sentrix_ids_set
+    else:
+        analyzed_sentrix_ids = all_subdirs
+    
+    available_sentrix_ids = [
+        sentrix_id for sentrix_id in analyzed_sentrix_ids
+        if check_if_previous_analysis_was_successful(
+            status_json_path=get_status_json_path(
+                sentrix_id=sentrix_id,
+                sentrix_id_directory=results_directory / sentrix_id,
+                downsize_to=downsize_to,
+            ),
+            logger=logger,
         )
-        # status_json_path = get_status_json_path(
-        #     results_directory=results_directory,
-        #     preprocessing_method=preprocessing_method,
-        #     sentrix_id=sentrix_id,
-        #     bin_size=bin_size,
-        #     min_probes_per_bin=min_probes_per_bin,
-        #     downsize_to=downsize_to,
-        # )
-        # if not check_if_previous_analysis_was_successful(status_json_path=status_json_path):
-        #     analysed_sentrix_ids.remove(sentrix_id)
+    ]
     
-
-    
-
-    # get_status_json_path
-    return
+    return available_sentrix_ids
