@@ -4,8 +4,10 @@ from typing import Optional, Union
 from cnquant_dependencies.enums.CommonArrayType import CommonArrayType
 from cnquant_dependencies.models.StatusJson import (
     check_if_previous_analysis_was_successful,
-)
+    get_status_json_path,
 
+)
+from cnquant_dependencies.bin_settings_functions import make_bin_settings_string
 
 def get_sentrix_ids(idat_directory: Path) -> list[str]:
     """
@@ -131,3 +133,41 @@ def sentrix_ids_to_process(
     current_missing_sentrix_ids = available_sample_ids - precomputed_sentrix_ids
 
     return current_missing_sentrix_ids
+
+def get_only_processed_sentrix_ids(
+    sentrix_ids_to_process: Union[list[str], set[str]],
+    results_directory: Path,
+    preprocessing_method: str,
+    CNV_base_output_directory: Path,
+    bin_size: int,
+    min_probes_per_bin: int,
+    downsize_to: str = CommonArrayType.NO_DOWNSIZING.value,
+):
+    bin_settings_string: str = make_bin_settings_string(bin_size=bin_size, min_probes_per_bin=min_probes_per_bin)
+    search_directory: Path = CNV_base_output_directory / preprocessing_method / bin_settings_string
+    analysed_sentrix_ids: list[str] = list(os.listdir(path=search_directory))
+
+    for sentrix_id in analysed_sentrix_ids:
+        sentrix_id_output_directory: Path = search_directory / sentrix_id
+        
+        current_status_json = get_status_json_path(
+            sentrix_id=sentrix_id,
+            sentrix_id_directory=sentrix_id_output_directory,
+            downsize_to=downsize_to,
+        )
+        # status_json_path = get_status_json_path(
+        #     results_directory=results_directory,
+        #     preprocessing_method=preprocessing_method,
+        #     sentrix_id=sentrix_id,
+        #     bin_size=bin_size,
+        #     min_probes_per_bin=min_probes_per_bin,
+        #     downsize_to=downsize_to,
+        # )
+        # if not check_if_previous_analysis_was_successful(status_json_path=status_json_path):
+        #     analysed_sentrix_ids.remove(sentrix_id)
+    
+
+    
+
+    # get_status_json_path
+    return

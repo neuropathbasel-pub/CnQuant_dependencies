@@ -209,18 +209,20 @@ def load_analysis_status_json(status_json_path: str | Path, logger = logging.get
         raise OSError(f"Unable to read file {path}: {e}")
     
 def check_if_previous_analysis_was_successful(
-    status_json_path: str | Path, logger = logging.getLogger(name=__name__)
+    status_json_path: str | Path, logger = logging.getLogger(name=__name__),
+    success_status_string: str = "analysis_completed_successfully"
 ) -> bool:
     """
     Checks if a previous analysis was successful by reading a status JSON file.
 
     This function verifies the existence of the specified JSON file and parses it to determine
-    if the analysis completed successfully. It looks for the key "analysis_completed_successfully"
+    if the analysis completed successfully. It looks for the key success_status_string
     in the JSON and checks if its value is "true" (case-insensitive). If the file does not exist
     or the status is not "true", it returns False.
 
     Args:
         status_json_path (str | Path): The path to the JSON file containing the analysis status.
+        success_status_string (str): The key in the JSON to check for success status. Defaults to "analysis_completed_successfully".
 
     Returns:
         bool: True if the analysis was successful, False otherwise.
@@ -235,7 +237,7 @@ def check_if_previous_analysis_was_successful(
                 status_json = orjson.loads(file.read())
                 status: bool = (
                     True
-                    if status_json.get("analysis_completed_successfully").lower()
+                    if status_json.get(success_status_string).lower()
                     == "true"
                     else False
                 )
