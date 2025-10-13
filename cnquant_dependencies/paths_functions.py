@@ -136,8 +136,8 @@ def sentrix_ids_to_process(
     return current_missing_sentrix_ids
 
 def get_only_processed_sentrix_ids(
-    sentrix_ids_to_check: list[str] | set[str] | None,
     results_directory: Path,
+    sentrix_ids_to_check: Optional[list[str] | set[str]] = None,
     downsize_to: str = CommonArrayType.NO_DOWNSIZING.value,
     logger: logging.Logger = logging.getLogger(name=__name__),
 ) -> list[str]:
