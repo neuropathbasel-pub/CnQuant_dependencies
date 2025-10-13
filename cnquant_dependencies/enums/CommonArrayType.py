@@ -1,5 +1,5 @@
 from enum import Enum, unique
-from cnquant_dependencies.ArrayType import ArrayType
+from cnquant_dependencies.enums.ArrayType import ArrayType
 from typing import Sequence, cast, Union
 
 def map_array_types_to_human_readable_name(array_type: ArrayType) -> str:

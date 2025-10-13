@@ -3,7 +3,7 @@
 from enum import Enum, unique
 from pathlib import Path
 from typing import cast, Sequence
-from cnquant_dependencies.IdatParser import IdatParser
+from cnquant_dependencies.models.IdatParser import IdatParser
 
 
 def _find_valid_path(path):

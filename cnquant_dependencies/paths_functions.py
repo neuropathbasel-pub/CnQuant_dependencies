@@ -1,104 +1,133 @@
-import orjson
-import logging
+import os
 from pathlib import Path
-from typing import Any
-from cnquant_dependencies.CommonArrayType import CommonArrayType
+from typing import Optional, Union
+from cnquant_dependencies.enums.CommonArrayType import CommonArrayType
+from cnquant_dependencies.models.StatusJson import (
+    check_if_previous_analysis_was_successful,
+)
 
-def get_status_json_path(sentrix_id: str, sentrix_id_directory: Path, downsize_to: str = CommonArrayType.NO_DOWNSIZING.value) -> Path:
-    """Generates the path to a status JSON file based on the sentrix ID, directory, and downsize option.
-    
+
+def get_sentrix_ids(idat_directory: Path) -> list[str]:
+    """
+    Retrieves a list of valid Sentrix IDs from a directory containing non-empty .idat files.
+    This function scans the specified directory for files with the extensions
+    '_Red.idat' and '_Grn.idat'. It then extracts the base names of these files
+    (excluding the extensions) and returns a list of Sentrix IDs that have both
+    corresponding '_Red.idat' and '_Grn.idat' files.
     Args:
-        sentrix_id (str): The sentrix ID used as the base name for the file.
-        sentrix_id_directory (Path): The directory where the status JSON file is located.
-        downsize_to (str): The downsize option (e.g., a CommonArrayType value). Defaults to NO_DOWNSIZING.value, which adds no suffix.
-    
+        idat_directory (Path): The directory containing the .idat files.
     Returns:
-        Path: The full path to the status JSON file, including any downsize suffix if applicable.
+        list[str]: A list of valid Sentrix IDs that have both '_Red.idat' and
+                   '_Grn.idat' files in the specified directory.
     """
-    file_suffix = f"{'_' + downsize_to if downsize_to != CommonArrayType.NO_DOWNSIZING.value else ''}"
-    status_json_path: Path = (
-        sentrix_id_directory / f"{sentrix_id}_status{file_suffix}.json"
-    )
-    return status_json_path
+    red_files: list[str] = []
+    grn_files: list[str] = []
+    for file in os.listdir(path=idat_directory):
+        if (
+            file.endswith(".idat")
+            and os.path.getsize(filename=os.path.join(idat_directory, file)) != 0
+        ):
+            if file.endswith("_Red.idat"):
+                red_files.append(file.replace("_Red.idat", ""))
+            elif file.endswith("_Grn.idat"):
+                grn_files.append(file.replace("_Grn.idat", ""))
+    valid_sentrix_ids = list(set(red_files) & set(grn_files))
 
-# def load_analysis_status_json(status_json_path: str | Path,  ) -> dict:
-   
-#     if not Path(status_json_path).exists():
-#         return {}
-#     try:
-#         with open(file=status_json_path, mode="rb") as file:
-#             status_json = orjson.loads(file.read())
-#             return status_json
-#     except PermissionError:
-#         raise PermissionError(f"Permission denied for reading {status_json_path}.")
-#     except Exception as e:
-#         raise Exception(f"An error occurred while reading {status_json_path}: {e}")
-    
-def load_analysis_status_json(status_json_path: str | Path, logger = logging.getLogger(name=__name__)) -> dict[str, Any]:
-    """Loads and parses a JSON file containing analysis status data.
-    
-    Args:
-        status_json_path (str | Path): The path to the JSON file to load.
-    
-    Returns:
-        dict[str, Any]: The parsed JSON data as a dictionary. Returns an empty dict if the file does not exist.
-    
-    Raises:
-        ValueError: If the file exists but contains invalid JSON or is not a dictionary.
-        OSError: If there are file I/O issues (e.g., permission denied).
-    """
-    path = Path(status_json_path)
-    if not path.exists():
-        logger.warning(f"Status JSON file does not exist: {path}")
-        return {}
-    
-    try:
-        with path.open("rb") as file:
-            data = orjson.loads(file.read())
-            if not isinstance(data, dict):
-                raise ValueError(f"Loaded data is not a dictionary: {type(data)}")
-            return data
-    except orjson.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in file {path}: {e}")
-        raise ValueError(f"Failed to decode JSON from {path}: {e}")
-    except OSError as e:
-        logger.error(f"File I/O error for {path}: {e}")
-        raise OSError(f"Unable to read file {path}: {e}")
-    
-def check_if_previous_analysis_was_successful(
-    status_json_path: str | Path, logger = logging.getLogger(name=__name__)
-) -> bool:
-    """
-    Checks if a previous analysis was successful by reading a status JSON file.
+    return valid_sentrix_ids
 
-    This function verifies the existence of the specified JSON file and parses it to determine
-    if the analysis completed successfully. It looks for the key "analysis_completed_successfully"
-    in the JSON and checks if its value is "true" (case-insensitive). If the file does not exist
-    or the status is not "true", it returns False.
 
-    Args:
-        status_json_path (str | Path): The path to the JSON file containing the analysis status.
+def get_precomputed_sample_ids(
+    current_precomputed_cnv_directory: Path,
+    rerun_failed_analyses: bool = False,
+    downsize_to: str = CommonArrayType.NO_DOWNSIZING.value,
+) -> set[str]:
+    processed_sentrix_ids: set[str] = set()
+    if os.path.exists(path=current_precomputed_cnv_directory):
+        for sentrix_id in os.listdir(path=current_precomputed_cnv_directory):
+            sentrix_id_directory: Path = Path(
+                current_precomputed_cnv_directory / sentrix_id
+            )
+            file_suffix = f"{'_' + downsize_to if downsize_to != CommonArrayType.NO_DOWNSIZING.value else ''}"
+            status_json_path: Path = (
+                sentrix_id_directory / f"{sentrix_id}_status{file_suffix}.json"
+            )
 
-    Returns:
-        bool: True if the analysis was successful, False otherwise.
-
-    Raises:
-        PermissionError: If there is a permission issue reading the file.
-    """
-    status: bool = False
-    if Path(status_json_path).exists():
-        try:
-            with open(file=status_json_path, mode="rb") as file:
-                status_json = orjson.loads(file.read())
-                status: bool = (
-                    True
-                    if status_json.get("analysis_completed_successfully").lower()
-                    == "true"
-                    else False
+            if rerun_failed_analyses:
+                analysis_successful: bool = check_if_previous_analysis_was_successful(
+                    status_json_path=status_json_path
                 )
-        except PermissionError:
-            raise PermissionError(f"Permission denied for reading {status_json_path}.")
-        except Exception as e:
-            logger.critical(f"Error reading {status_json_path}: {e}")
+                if not analysis_successful:
+                    processed_sentrix_ids.add(sentrix_id)
+            else:
+                status_json_path_exists: bool = status_json_path.exists()
 
-    return status
+                if status_json_path_exists:
+                    processed_sentrix_ids.add(sentrix_id)
+
+    return processed_sentrix_ids
+
+
+def sentrix_ids_to_process(
+    idat_directory: Path,
+    preprocessing_method: str,
+    reference_sentrix_ids: set[str],
+    CNV_base_output_directory: Path,
+    bin_size: int,
+    min_probes_per_bin: int,
+    sentrix_ids_to_process: Optional[Union[list[str], set[str]]] = None,
+    rerun_sentrix_ids: bool = False,
+    downsize_to: str = CommonArrayType.NO_DOWNSIZING.value,
+) -> set[str]:
+    """
+    Determine which Sentrix IDs need processing for CNV analysis based on specified parameters.
+
+    Args:
+        idat_directory (Path): Directory where IDAT files are stored.
+        preprocessing_methods (list[str]): List of preprocessing methods to apply.
+        reference_sentrix_ids (set[str]): Sentrix IDs to exclude from processing, e.g., reference samples.
+        CNV_base_output_directory (Path): Base directory where preprocessed CNV data is stored.
+        combinations (list[tuple[int, int]]): List of tuples where each tuple contains:
+            - bin_size (int): Size of the bins for CNV analysis.
+            - min_probes_per_bin (int): Minimum number of probes required per bin.
+
+    Returns:
+        dict[str, dict[str, list[tuple[int, int]]]]: A nested dictionary where:
+            - The outer key is the preprocessing method.
+            - The inner key is a Sentrix ID that needs processing.
+            - The value is a list of tuples, each containing bin size and min probes per bin,
+              indicating the settings for which this Sentrix ID has not yet been processed.
+
+    Notes:
+        - The function uses helper functions `get_sentrix_ids` and `get_precomputed_sample_ids`
+          to gather existing and precomputed IDs respectively.
+        - Prints the number of remaining samples to process for each combination of settings.
+    """
+
+    available_sample_ids = (
+        set(get_sentrix_ids(idat_directory=idat_directory)) - reference_sentrix_ids
+    )
+    if sentrix_ids_to_process is not None:
+        available_sample_ids = available_sample_ids.intersection(
+            set(sentrix_ids_to_process)
+        )
+
+    bin_settings_string: str = (
+        f"bin_size_{bin_size}_min_probes_per_bin_{min_probes_per_bin}"
+    )
+
+    current_precomputed_cnv_directory = (
+        CNV_base_output_directory / preprocessing_method / bin_settings_string
+    )
+
+    if rerun_sentrix_ids:
+        precomputed_sentrix_ids = set()
+    else:
+        precomputed_sentrix_ids = get_precomputed_sample_ids(
+            current_precomputed_cnv_directory=current_precomputed_cnv_directory,
+            rerun_failed_analyses=rerun_sentrix_ids,
+            downsize_to=downsize_to,
+        )
+
+    current_missing_sentrix_ids = available_sample_ids - precomputed_sentrix_ids
+
+    return current_missing_sentrix_ids

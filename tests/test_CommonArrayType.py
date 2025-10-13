@@ -1,5 +1,5 @@
-from cnquant_dependencies.CommonArrayType import CommonArrayType
-from cnquant_dependencies.ArrayType import ArrayType
+from cnquant_dependencies.enums.CommonArrayType import CommonArrayType
+from cnquant_dependencies.enums.ArrayType import ArrayType
 
 def test_CommonArrayType():
     all_members_set = set(CommonArrayType.members_list())
