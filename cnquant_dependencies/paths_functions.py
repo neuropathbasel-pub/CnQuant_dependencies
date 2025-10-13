@@ -113,10 +113,7 @@ def sentrix_ids_to_process(
         available_sample_ids = available_sample_ids.intersection(
             set(sentrix_ids_to_process)
         )
-
-    bin_settings_string: str = (
-        f"bin_size_{bin_size}_min_probes_per_bin_{min_probes_per_bin}"
-    )
+    bin_settings_string: str = make_bin_settings_string(bin_size=bin_size, min_probes_per_bin=min_probes_per_bin)
 
     current_precomputed_cnv_directory = (
         CNV_base_output_directory / preprocessing_method / bin_settings_string
