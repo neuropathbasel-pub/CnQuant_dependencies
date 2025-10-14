@@ -178,6 +178,7 @@ def generate_summary_data_paths(
     min_probes_per_bin: int,
     methylation_class: str,
     downsizing_target: str,
+    preprocessing_method: str,
 ) -> tuple[Path, Path, Path]:
     """Generates file paths for summary data outputs, including metadata, plot data, and genes data.
 
@@ -206,7 +207,7 @@ def generate_summary_data_paths(
         min_probes_per_bin=min_probes_per_bin,
     )
     output_directory: Path = Path(
-        base_output_directory / bin_settings_directory_string / methylation_class
+        base_output_directory / preprocessing_method / bin_settings_directory_string / methylation_class
     )
     output_directory.mkdir(parents=True, exist_ok=True)
 
