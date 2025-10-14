@@ -179,6 +179,7 @@ def generate_summary_data_paths(
     methylation_class: str,
     downsizing_target: str,
     preprocessing_method: str,
+    create_directory: bool = True,
 ) -> tuple[Path, Path, Path]:
     """Generates file paths for summary data outputs, including metadata, plot data, and genes data.
 
@@ -209,7 +210,8 @@ def generate_summary_data_paths(
     output_directory: Path = Path(
         base_output_directory / preprocessing_method / bin_settings_directory_string / methylation_class
     )
-    output_directory.mkdir(parents=True, exist_ok=True)
+    if create_directory:
+        output_directory.mkdir(parents=True, exist_ok=True)
 
     save_name_prefix: Path = output_directory / Path(methylation_class)
 
