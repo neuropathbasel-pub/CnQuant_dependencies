@@ -6,9 +6,9 @@ from cnquant_dependencies.enums.CommonArrayType import CommonArrayType
 from cnquant_dependencies.models.StatusJson import (
     check_if_previous_analysis_was_successful,
     get_status_json_path,
-
 )
 from cnquant_dependencies.bin_settings_functions import make_bin_settings_string
+
 
 def get_sentrix_ids(idat_directory: Path) -> list[str]:
     """
@@ -113,7 +113,9 @@ def sentrix_ids_to_process(
         available_sample_ids = available_sample_ids.intersection(
             set(sentrix_ids_to_process)
         )
-    bin_settings_string: str = make_bin_settings_string(bin_size=bin_size, min_probes_per_bin=min_probes_per_bin)
+    bin_settings_string: str = make_bin_settings_string(
+        bin_size=bin_size, min_probes_per_bin=min_probes_per_bin
+    )
 
     current_precomputed_cnv_directory = (
         CNV_base_output_directory / preprocessing_method / bin_settings_string
@@ -132,26 +134,31 @@ def sentrix_ids_to_process(
 
     return current_missing_sentrix_ids
 
+
 def get_only_processed_sentrix_ids(
     results_directory: Path,
     sentrix_ids_to_check: Optional[list[str] | set[str]] = None,
     downsize_to: str = CommonArrayType.NO_DOWNSIZING.value,
     logger: logging.Logger = logging.getLogger(name=__name__),
 ) -> list[str]:
-
     if not results_directory.exists() or not results_directory.is_dir():
-        logger.warning(f"Results directory does not exist or is not a directory: {results_directory}")
+        logger.warning(
+            f"Results directory does not exist or is not a directory: {results_directory}"
+        )
         return []
-    
+
     detected_sentrix_ids = set(os.listdir(path=results_directory))
-    
+
     if sentrix_ids_to_check is not None:
-        detected_sentrix_ids = detected_sentrix_ids.intersection(set(sentrix_ids_to_check))
+        detected_sentrix_ids = detected_sentrix_ids.intersection(
+            set(sentrix_ids_to_check)
+        )
     else:
         detected_sentrix_ids = detected_sentrix_ids
-    
+
     available_sentrix_ids = [
-        sentrix_id for sentrix_id in detected_sentrix_ids
+        sentrix_id
+        for sentrix_id in detected_sentrix_ids
         if check_if_previous_analysis_was_successful(
             status_json_path=get_status_json_path(
                 sentrix_id=sentrix_id,
@@ -161,5 +168,76 @@ def get_only_processed_sentrix_ids(
             logger=logger,
         )
     ]
-    
+
     return available_sentrix_ids
+
+
+def generate_summary_data_paths(
+    base_output_directory: Path,
+    bin_size: int,
+    min_probes_per_bin: int,
+    methylation_class: str,
+    downsizing_target: str,
+) -> tuple[Path, Path, Path]:
+    """Generates file paths for summary data outputs, including metadata, plot data, and genes data.
+
+    This function constructs the necessary directory structure and file paths based on the provided
+    parameters. It creates the output directory if it does not exist.
+
+    Args:
+        base_output_directory (Path): The base directory where output files will be stored.
+        bin_size (int): The bin size used in the analysis.
+        min_probes_per_bin (int): The minimum number of probes per bin.
+        methylation_class (str): The methylation class (e.g., a category like "hyper" or "hypo").
+        downsizing_target (str): The target for downsizing (e.g., an array type or "no_downsizing").
+
+    Returns:
+        tuple[Path, Path, Path]: A tuple containing:
+            - plot_save_path (Path): Path to the compressed JSON file for plot data (.json.zst).
+            - genes_save_path (Path): Path to the Parquet file for genes data (.parquet).
+            - metadata_path (Path): Path to the JSON file for metadata (.json).
+
+    Notes:
+        - The output directory is created under base_output_directory / bin_settings / methylation_class.
+        - File names follow the pattern: {methylation_class}_{downsizing_target}_[suffix].
+    """
+    bin_settings_directory_string = make_bin_settings_string(
+        bin_size=bin_size,
+        min_probes_per_bin=min_probes_per_bin,
+    )
+    output_directory: Path = Path(
+        base_output_directory / bin_settings_directory_string / methylation_class
+    )
+    output_directory.mkdir(parents=True, exist_ok=True)
+
+    save_name_prefix: Path = output_directory / Path(methylation_class)
+
+    metadata_path: Path = save_name_prefix.with_name(
+        name=f"{methylation_class}_{downsizing_target}_metadata.json"
+    )
+    plot_save_path: Path = save_name_prefix.with_name(
+        name=f"{methylation_class}_{downsizing_target}.json.zst"
+    )
+    genes_save_path: Path = save_name_prefix.with_name(
+        name=f"{methylation_class}_{downsizing_target}_genes.parquet"
+    )
+    return plot_save_path, genes_save_path, metadata_path
+
+
+# def get_cnquant_output_data_paths(sentrix_id: str, downsize_to: CommonArrayType, file_type: str, output_directory: Path, preprocessing_method: str, bin_size: int, min_probes_per_bin: int)
+#     path_prefix_bins = cnv_dir / Path(sentrix_id) /f"{sentrix_id}"
+#     if downsize_to == CommonArrayType.NO_DOWNSIZING.value:
+#         detail_path = Path(f"{path_prefix_bins}_detail.parquet")
+#         segments_path = Path(f"{path_prefix_bins}_segments.parquet")
+#     else:
+#         detail_path = Path(f"{path_prefix_bins}_detail_{downsize_to}.parquet")
+#         segments_path = Path(f"{path_prefix_bins}_segments_{downsize_to}.parquet")
+#     pass
+
+# current_results_directory = (
+#             cnv_results_base_directory
+#             / preprocessing_method
+#             / make_bin_settings_string(
+#                 bin_size=bin_size, min_probes_per_bin=min_probes_per_bin
+#             )
+#         )
