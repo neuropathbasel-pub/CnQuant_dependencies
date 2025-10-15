@@ -1,5 +1,6 @@
 import polars as pl
 import pandas as pd
+import orjson
 import hashlib
 import pickle
 import zstandard as zstd
@@ -154,3 +155,43 @@ def load_pickle_with_checksum(file_path: Path) -> Any:
     
     # Deserialize and return
     return pickle.loads(pickle_bytes)
+
+
+def load_zstd_json_plot_to_dict(file_path: Path) -> dict:
+    """Loads a Zstandard-compressed JSON file into a dictionary and verifies its SHA256 checksum.
+    
+    Args:
+        file_path (Path): The path to the compressed JSON file (.json.zst).
+    
+    Returns:
+        dict: The deserialized JSON data as a dictionary.
+    
+    Raises:
+        FileNotFoundError: If the file or its checksum file (.sha256) does not exist.
+        ValueError: If the checksum verification fails, indicating potential file corruption.
+    """
+
+    if not file_path.exists():
+        raise FileNotFoundError(f"File not found: {file_path}")
+    
+    with open(file=file_path, mode='rb') as f:
+        dctx = zstd.ZstdDecompressor()
+        with dctx.stream_reader(source=f) as reader:
+            file_content = reader.read()
+            data = orjson.loads(file_content)
+
+    checksum_file = file_path.with_suffix(suffix=file_path.suffix + ".sha256")
+    if not checksum_file.exists():
+        raise FileNotFoundError(f"Checksum file {checksum_file} not found.")
+    
+    # Read expected checksum
+    with open(file=checksum_file, mode="r") as f:
+        expected_checksum = f.read().split()[0]
+
+    # Compute actual checksum
+    actual_checksum = compute_sha256(file_path=file_path)
+    
+    if actual_checksum != expected_checksum:
+        raise ValueError(f"Checksum mismatch for {file_path}. File may be corrupt.")
+
+    return data
