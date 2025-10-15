@@ -250,7 +250,7 @@ def get_available_summary_plots(
     genes_file_suffix: str = "_genes.parquet",
     plot_file_suffix: str = ".json.zst",
     logger: logging.Logger = logging.getLogger(name=__name__),
-) -> dict:
+) -> dict[str,dict[tuple[int,int],dict[str,list[str]]]]:
     """
     Scans the summary plots base directory to identify available preprocessing methods,
     bin settings, and methylation classes with their associated downsizing targets.
