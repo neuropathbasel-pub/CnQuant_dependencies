@@ -2,13 +2,13 @@ import os
 import logging
 from pathlib import Path
 from typing import Optional, Union
+from collections import defaultdict
 from cnquant_dependencies.enums.CommonArrayType import CommonArrayType
 from cnquant_dependencies.models.StatusJson import (
     check_if_previous_analysis_was_successful,
     get_status_json_path,
 )
 from cnquant_dependencies.bin_settings_functions import make_bin_settings_string
-
 
 def get_sentrix_ids(idat_directory: Path) -> list[str]:
     """
@@ -244,3 +244,113 @@ def generate_summary_data_paths(
 #                 bin_size=bin_size, min_probes_per_bin=min_probes_per_bin
 #             )
 #         )
+
+def get_available_summary_plots(
+    summary_plots_base_directory: Path,
+    genes_file_suffix: str = "_genes.parquet",
+    plot_file_suffix: str = ".json.zst",
+    logger: logging.Logger = logging.getLogger(name=__name__),
+) -> dict:
+    """
+    Scans the summary plots base directory to identify available preprocessing methods,
+    bin settings, and methylation classes with their associated downsizing targets.
+
+    The function expects a directory structure like:
+    summary_plots_base_directory/
+    ├── preprocessing_method1/
+    │   ├── bin_size_min_probes/
+    │   │   ├── results_directory1/
+    │   │   │   ├── results_prefix_target1_genes.parquet
+    │   │   │   ├── results_prefix_target1.json.zst
+    │   │   │   └── ...
+    │   │   └── results_directory2/
+    │   └── ...
+    └── preprocessing_method2/
+        └── ...
+
+    For each bin settings directory (e.g., "50000_20"), it extracts bin_size and min_probes
+    from the name. For each results directory, it collects genes files and plot files,
+    strips the results_prefix and suffixes, and ensures they match in count.
+
+    Args:
+        summary_plots_base_directory (Path): The root directory containing preprocessing method subdirectories.
+        genes_file_suffix (str, optional): Suffix for genes files (default: "_genes.parquet").
+        plot_file_suffix (str, optional): Suffix for plot files (default: ".json.zst").
+
+    Returns:
+        dict: A nested dictionary with the following structure:
+            {
+                "preprocessing_method": {
+                    (bin_size, min_probes): {
+                        "results_directory_name": ["target1", "target2", ...]
+                    }
+                }
+            }
+            - Keys at top level: preprocessing method names (str).
+            - Keys at second level: tuples of (bin_size: int, min_probes: int).
+            - Keys at third level: results directory names (str).
+            - Values at third level: lists of downsizing targets (str), derived from genes file names.
+
+    Raises:
+        ValueError: If the number of genes files does not match the number of plot files in any results directory.
+    """
+    available_methylation_classes = dict()
+    for preprocessing_method in [
+        item.name for item in summary_plots_base_directory.iterdir() if item.is_dir()
+    ]:
+        available_methylation_classes[preprocessing_method] = defaultdict(
+            dict[str, list[str]]
+        )
+        for available_settings in [
+            item.name
+            for item in Path(
+                summary_plots_base_directory / preprocessing_method
+            ).iterdir()
+            if item.is_dir()
+        ]:
+            integers: list[int] = list()
+            parts = available_settings.split("_")
+            for part in parts:
+                if part.isdigit():
+                    integers.append(int(part))
+
+            available_methylation_classes[preprocessing_method][
+                (integers[0], integers[1])
+            ] = dict()
+            for results_directory in [
+                item
+                for item in Path(
+                    summary_plots_base_directory
+                    / preprocessing_method
+                    / available_settings
+                ).iterdir()
+                if item.is_dir()
+            ]:
+                genes_files_downsizing_targets = []
+                plots_downsizing_targets = []
+                results_prefix = f"{results_directory.name}_"
+                for file in results_directory.iterdir():
+                    if file.name.endswith(plot_file_suffix):
+                        plots_downsizing_targets.append(
+                            file.name.replace(results_prefix, "").rstrip(
+                                plot_file_suffix
+                            )
+                        )
+                    if file.name.endswith(genes_file_suffix):
+                        genes_files_downsizing_targets.append(
+                            file.name.replace(results_prefix, "").rstrip(
+                                genes_file_suffix
+                            )
+                        )
+                if len(genes_files_downsizing_targets) != len(plots_downsizing_targets):
+                    logger.error(
+                        msg=f"Number of genes files ({len(genes_files_downsizing_targets)}) does not match number of plot files ({len(plots_downsizing_targets)}) in {results_directory}."
+                    )
+                    raise ValueError(
+                        f"Number of genes files ({len(genes_files_downsizing_targets)}) does not match number of plot files ({len(plots_downsizing_targets)}) in {results_directory}."
+                    )
+                available_methylation_classes[preprocessing_method][
+                    (integers[0], integers[1])
+                ][results_directory.name] = genes_files_downsizing_targets
+
+    return available_methylation_classes
