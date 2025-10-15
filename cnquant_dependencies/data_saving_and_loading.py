@@ -85,7 +85,7 @@ def save_json_plot(json_str, plot_save_path: Path) -> None:
     
     # Compute and save SHA256 checksum
     sha256_hash = hashlib.sha256(string=compressed).hexdigest()
-    checksum_path = plot_save_path.with_suffix('.sha256')
+    checksum_path = plot_save_path.with_suffix(suffix=plot_save_path.suffix + ".sha256")
     with open(file=checksum_path, mode='w') as f:
         f.write(f"{sha256_hash}  {plot_save_path.name}\n")
 
