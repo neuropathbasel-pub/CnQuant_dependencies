@@ -42,3 +42,46 @@ def get_available_methylation_classes_and_their_options(
                     ][downsizing_target][preprocessing_method].add(bin_settings)
 
     return available_methylation_classes_and_their_options
+
+def get_available_methylation_classes_and_their_options_v1(
+    available_summary_plots: dict[str, dict[tuple[int, int], dict[str, list[str]]]],
+):
+    available_methylation_classes_and_their_options = dict()
+    for preprocessing_method in available_summary_plots:
+        for bin_settings in available_summary_plots[preprocessing_method]:
+            for annotation in available_summary_plots[preprocessing_method][
+                bin_settings
+            ]:
+                if available_methylation_classes_and_their_options.get(
+                    annotation, True
+                ):
+                    available_methylation_classes_and_their_options[annotation] = dict()
+                    available_methylation_classes_and_their_options[annotation][
+                        "downsized_to"
+                    ] = dict()
+                for downsizing_target in available_summary_plots[preprocessing_method][
+                    bin_settings
+                ][annotation]:
+                    if available_methylation_classes_and_their_options[annotation].get(
+                        "downsized_to", True
+                    ):
+                        available_methylation_classes_and_their_options[annotation][
+                            "downsized_to"
+                        ][downsizing_target] = dict()
+                    if available_methylation_classes_and_their_options[annotation][
+                        "downsized_to"
+                    ].get(downsizing_target, True):
+                        available_methylation_classes_and_their_options[annotation][
+                            "downsized_to"
+                        ][downsizing_target] = dict()
+
+                    if available_methylation_classes_and_their_options[annotation][
+                        "downsized_to"
+                    ][downsizing_target].get(preprocessing_method, True):
+                        available_methylation_classes_and_their_options[annotation][
+                            "downsized_to"
+                        ][downsizing_target][preprocessing_method] = set()
+                    available_methylation_classes_and_their_options[annotation][
+                        "downsized_to"
+                    ][downsizing_target][preprocessing_method].add(bin_settings)
+    return available_methylation_classes_and_their_options
