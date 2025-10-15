@@ -112,7 +112,7 @@ def save_pickle_with_checksum(obj: Any, file_path: Path) -> None:
         f.write(pickle_bytes)
     
     # Save the checksum to a .sha256 file
-    checksum_path = file_path.with_suffix('.sha256')
+    checksum_path = file_path.with_suffix(suffix=file_path.suffix + ".sha256")
     with open(checksum_path, 'w') as f:
         f.write(f"{sha256_hash}  {file_path.name}\n")
 
