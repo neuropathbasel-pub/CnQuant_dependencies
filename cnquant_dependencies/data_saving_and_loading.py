@@ -29,7 +29,7 @@ def save_to_parquet_with_checksum(dataframe: pl.DataFrame, file_path: Path) -> N
 def save_pandas_to_parquet_with_checksum(dataframe: pd.DataFrame, file_path: Path) -> None:
     """Save a Pandas DataFrame to Zstandard-compressed Parquet and generate SHA256 checksum."""
     # Save to Parquet with Zstandard compression
-    dataframe.to_parquet(path=file_path, compression = "zstd")
+    dataframe.to_parquet(path=file_path, compression = "zstd", index = False)
     
     # Compute and save checksum
     checksum = compute_sha256(file_path=file_path)
