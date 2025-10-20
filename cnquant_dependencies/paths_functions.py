@@ -354,3 +354,52 @@ def get_available_summary_plots(
                 ][results_directory.name] = genes_files_downsizing_targets
 
     return available_methylation_classes
+
+def get_combined_plot_path(
+    base_output_directory: Path,
+    bin_size: int,
+    min_probes_per_bin: int,
+    methylation_class: str,
+    downsizing_target: str,
+    preprocessing_method: str,
+    create_directory: bool = True,
+):
+    """Generates the file path for a combined plot data file in compressed JSON format.
+    
+    This function constructs the output directory path based on the provided parameters
+    and creates the directory if it does not exist (when create_directory is True).
+    The file path follows the naming convention for combined plot data.
+    
+    Args:
+        base_output_directory (Path): The base directory where output files will be stored.
+        bin_size (int): The bin size used in the analysis.
+        min_probes_per_bin (int): The minimum number of probes per bin.
+        methylation_class (str): The methylation class (e.g., a category like "hyper" or "hypo").
+        downsizing_target (str): The target for downsizing (e.g., an array type or "no_downsizing").
+        preprocessing_method (str): The preprocessing method used (e.g., "quantile").
+        create_directory (bool, optional): Whether to create the output directory if it doesn't exist. Defaults to True.
+    
+    Returns:
+        Path: The full path to the compressed JSON plot file (.json.zst).
+    
+    Notes:
+        - The output directory is created under base_output_directory / preprocessing_method / bin_settings / methylation_class.
+        - File name follows the pattern: {methylation_class}_{downsizing_target}.json.zst.
+    """
+    bin_settings_directory_string = make_bin_settings_string(
+        bin_size=bin_size,
+        min_probes_per_bin=min_probes_per_bin,
+    )
+    output_directory: Path = Path(
+        base_output_directory / preprocessing_method / bin_settings_directory_string / methylation_class
+    )
+    if create_directory:
+        output_directory.mkdir(parents=True, exist_ok=True)
+
+    save_name_prefix: Path = output_directory / Path(methylation_class)
+
+    plot_save_path: Path = save_name_prefix.with_name(
+        name=f"{methylation_class}_{downsizing_target}.json.zst"
+    )
+
+    return plot_save_path
