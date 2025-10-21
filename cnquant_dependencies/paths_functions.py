@@ -363,7 +363,7 @@ def get_combined_plot_path(
     preprocessing_method: str,
     file_name_suffix: str = "combined",
     create_directory: bool = True,
-):
+) -> Path:
     """Generates the file path for a combined plot data file in compressed JSON format.
     
     This function constructs the output directory path based on the provided parameters
@@ -386,7 +386,7 @@ def get_combined_plot_path(
         - The output directory is created under base_output_directory / preprocessing_method / bin_settings / methylation_class.
         - File name follows the pattern: {methylation_class}_{file_name_suffix}.json.zst.
     """
-    bin_settings_directory_string = make_bin_settings_string(
+    bin_settings_directory_string: str = make_bin_settings_string(
         bin_size=bin_size,
         min_probes_per_bin=min_probes_per_bin,
     )
