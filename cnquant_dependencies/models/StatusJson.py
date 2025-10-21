@@ -192,7 +192,7 @@ def load_analysis_status_json(status_json_path: str | Path, logger = logging.get
     """
     path = Path(status_json_path)
     if not path.exists():
-        logger.warning(f"Status JSON file does not exist: {path}")
+        # logger.warning(f"Status JSON file does not exist: {path}")
         return {}
     
     try:
