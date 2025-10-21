@@ -35,7 +35,6 @@ class ArrayType(Enum):
     ILLUMINA_EPIC_V2 = "epic_v2"
     ILLUMINA_MSA48 = "msa48"
     ILLUMINA_MOUSE = "mouse"
-    # CNQUANT_COMBINED = "cnquant"
     UNKNOWN = "unknown"
 
     @classmethod
@@ -119,6 +118,18 @@ class ArrayType(Enum):
                 raise ValueError(f"Invalid value or name '{value}' for {cls.__name__}. Valid values: {valid_values}. Valid names: {valid_names}")
             except ValueError:
                 raise ValueError(f"Invalid value '{value}' for {cls.__name__}. Valid values are: {[member.value for member in cls]}")
+            
+    @classmethod
+    def make_pretty_array_type_string(cls, array_type: "ArrayType") -> str:
+        """Converts an ArrayType enum member to a more human-readable string."""
+        pretty_mappings = {
+            cls.ILLUMINA_27K : "HumanMethylation27",
+            cls.ILLUMINA_450K : "Infinium HumanMethylation450K",
+            cls.ILLUMINA_EPIC : "Infinium MethylationEPIC v1.0",
+            cls.ILLUMINA_EPIC_V2 : "Infinium MethylationEPIC v2.0",
+            cls.ILLUMINA_MSA48 : "Infinium Methylation Screening Array-48",
+        }
+        return pretty_mappings.get(array_type, "Unknown Array Type")
 
 if __name__ == "__main__":
     print(ArrayType.__name__)
