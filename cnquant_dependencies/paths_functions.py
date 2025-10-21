@@ -360,8 +360,8 @@ def get_combined_plot_path(
     bin_size: int,
     min_probes_per_bin: int,
     methylation_class: str,
-    downsizing_target: str,
     preprocessing_method: str,
+    file_name_suffix: str = "combined",
     create_directory: bool = True,
 ):
     """Generates the file path for a combined plot data file in compressed JSON format.
@@ -375,8 +375,8 @@ def get_combined_plot_path(
         bin_size (int): The bin size used in the analysis.
         min_probes_per_bin (int): The minimum number of probes per bin.
         methylation_class (str): The methylation class (e.g., a category like "hyper" or "hypo").
-        downsizing_target (str): The target for downsizing (e.g., an array type or "no_downsizing").
         preprocessing_method (str): The preprocessing method used (e.g., "quantile").
+        file_name_suffix (str, optional): Suffix for the file name (default: "combined").
         create_directory (bool, optional): Whether to create the output directory if it doesn't exist. Defaults to True.
     
     Returns:
@@ -384,7 +384,7 @@ def get_combined_plot_path(
     
     Notes:
         - The output directory is created under base_output_directory / preprocessing_method / bin_settings / methylation_class.
-        - File name follows the pattern: {methylation_class}_{downsizing_target}.json.zst.
+        - File name follows the pattern: {methylation_class}_{file_name_suffix}.json.zst.
     """
     bin_settings_directory_string = make_bin_settings_string(
         bin_size=bin_size,
@@ -399,7 +399,7 @@ def get_combined_plot_path(
     save_name_prefix: Path = output_directory / Path(methylation_class)
 
     plot_save_path: Path = save_name_prefix.with_name(
-        name=f"{methylation_class}_{downsizing_target}.json.zst"
+        name=f"{methylation_class}_{file_name_suffix}.json.zst"
     )
 
     return plot_save_path
