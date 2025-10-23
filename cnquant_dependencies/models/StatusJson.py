@@ -6,7 +6,7 @@ from cnquant_dependencies.enums.CommonArrayType import CommonArrayType
 from typing import Optional
 from pathlib import Path
 
-
+success_status_string: str = "analysis_completed_successfully"
 
 class StatusJson:
     """
@@ -210,7 +210,7 @@ def load_analysis_status_json(status_json_path: str | Path, logger = logging.get
     
 def check_if_previous_analysis_was_successful(
     status_json_path: str | Path, logger = logging.getLogger(name=__name__),
-    success_status_string: str = "analysis_completed_successfully"
+    success_status_string: str = success_status_string
 ) -> bool:
     """
     Checks if a previous analysis was successful by reading a status JSON file.
