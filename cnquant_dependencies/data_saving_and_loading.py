@@ -6,6 +6,7 @@ import pickle
 import zstandard as zstd
 from pathlib import Path
 from typing import Any
+from cnquant_dependencies.custom_errors import FileCorruptionError
 
 def compute_sha256(file_path: Path) -> str:
     """Compute SHA256 checksum of a file."""
@@ -52,7 +53,7 @@ def load_parquet_with_checksum_verification(file_path: Path) -> pl.DataFrame:
     actual_checksum = compute_sha256(file_path=file_path)
     
     if actual_checksum != expected_checksum:
-        raise ValueError(f"Checksum mismatch for {file_path}. File may be corrupt.")
+        raise FileCorruptionError(f"Checksum mismatch for {file_path}. The file might be corrupt.")
     
     # Load the DataFrame
     return pl.read_parquet(source=file_path)
@@ -128,7 +129,7 @@ def load_pickle_with_checksum(file_path: Path) -> Any:
 
     Raises:
         FileNotFoundError: If the pickle or checksum file is missing.
-        ValueError: If the checksum does not match.
+        FileCorruptionError: If the checksum does not match.
         Exception: For other loading or verification errors.
     """
     checksum_path = file_path.with_suffix('.sha256')
@@ -151,7 +152,7 @@ def load_pickle_with_checksum(file_path: Path) -> Any:
     
     # Verify
     if actual_hash != expected_hash:
-        raise ValueError(f"Checksum mismatch for {file_path}. Expected: {expected_hash}, Got: {actual_hash}")
+        raise FileCorruptionError(file_path=f"Checksum mismatch for {file_path}. The file might be corrupt.")
     
     # Deserialize and return
     return pickle.loads(pickle_bytes)
@@ -192,6 +193,6 @@ def load_zstd_json_plot_to_dict(file_path: Path) -> dict:
     actual_checksum = compute_sha256(file_path=file_path)
     
     if actual_checksum != expected_checksum:
-        raise ValueError(f"Checksum mismatch for {file_path}. File may be corrupt.")
+        raise FileCorruptionError(f"Checksum mismatch for {file_path}. The file may be corrupt.")
 
     return data

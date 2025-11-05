@@ -1,3 +1,5 @@
+from pathlib import Path
+
 class Missing_idat(Exception):
     """Reports errors related to missing idat files"""
     def __init__(self, message="Missing idat files"):
@@ -28,4 +30,10 @@ class Failure_to_convert_sentrix_id(Exception):
     """Reports errors related to converting idat to 450k format"""
     def __init__(self, sentrix_id: str = "missing sentrix id",  error: str = "missing error"):
         self.message = f"Failed to convert idat pair id: {sentrix_id}.\nError: {error}"
+        super().__init__(self.message)
+
+class FileCorruptionError(ValueError):
+    "Reports errors related to file corruption detected via checksum mismatch"""
+    def __init__(self, file_path: str|Path,  error: str = "The stored and computed checksums do not match"):
+        self.message = f"File corruption detected for file: {file_path}.\nError: {error}"
         super().__init__(self.message)
