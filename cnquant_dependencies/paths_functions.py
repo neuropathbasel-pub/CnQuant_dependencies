@@ -38,7 +38,7 @@ def get_sentrix_ids(idat_directory: Path) -> list[str]:
 
     return valid_sentrix_ids
 
-
+# TODO: Convert to Path
 def get_precomputed_sample_ids(
     current_precomputed_cnv_directory: Path,
     rerun_failed_analyses: bool = False,
