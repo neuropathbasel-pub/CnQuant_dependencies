@@ -30,7 +30,7 @@ def get_available_methylation_classes_and_their_options(
     )
     for preprocessing_method in available_summary_plots:
         for bin_settings in available_summary_plots[preprocessing_method]:
-            bin_size, min_probes_per_bin = bin_settings # FIXME:
+            # bin_size, min_probes_per_bin = bin_settings # FIXME:
             for annotation in available_summary_plots[preprocessing_method][
                 bin_settings
             ]:
