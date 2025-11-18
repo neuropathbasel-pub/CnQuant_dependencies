@@ -1,4 +1,5 @@
 from collections import defaultdict
+# FIXME: Function crashes when the directory structure is not as planned
 def get_available_methylation_classes_and_their_options(
     available_summary_plots: dict[str, dict[tuple[int, int], dict[str, list[str]]]],
 ):
@@ -29,7 +30,7 @@ def get_available_methylation_classes_and_their_options(
     )
     for preprocessing_method in available_summary_plots:
         for bin_settings in available_summary_plots[preprocessing_method]:
-            bin_size, min_probes_per_bin = bin_settings
+            bin_size, min_probes_per_bin = bin_settings # FIXME:
             for annotation in available_summary_plots[preprocessing_method][
                 bin_settings
             ]:
