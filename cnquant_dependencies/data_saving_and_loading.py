@@ -132,7 +132,7 @@ def load_pickle_with_checksum(file_path: Path) -> Any:
         FileCorruptionError: If the checksum does not match.
         Exception: For other loading or verification errors.
     """
-    checksum_path = file_path.with_suffix('.sha256')
+    checksum_path = file_path.with_suffix(suffix=file_path.suffix + ".sha256")
     
     if not file_path.exists():
         raise FileNotFoundError(f"Pickle file not found: {file_path}")
