@@ -132,7 +132,7 @@ class ArrayType(Enum):
         return pretty_mappings.get(array_type, "Unknown Array Type")
 
     @classmethod
-    def get_array_colors(cls) -> dict[str, dict[str, str]]:
+    def get_array_colors_dict(cls) -> dict[str, dict[str, str]]:
         return {
             "gain":{
                 ArrayType.ILLUMINA_450K.value: "#C23C3C",
