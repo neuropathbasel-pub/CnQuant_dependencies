@@ -58,6 +58,26 @@ def load_parquet_with_checksum_verification(file_path: Path) -> pl.DataFrame:
     # Load the DataFrame
     return pl.read_parquet(source=file_path)
 
+def load_parquet_with_checksum_verification_pandas(file_path: Path) -> pd.DataFrame:
+    """Load a Parquet file and verify its SHA256 checksum."""
+    checksum_file = file_path.with_suffix(suffix=file_path.suffix + ".sha256")
+
+    if not checksum_file.exists():
+        raise FileNotFoundError(f"Checksum file {checksum_file} not found.")
+    
+    # Read expected checksum
+    with open(file=checksum_file, mode="r") as f:
+        expected_checksum = f.read().split()[0]
+    
+    # Compute actual checksum
+    actual_checksum = compute_sha256(file_path=file_path)
+    
+    if actual_checksum != expected_checksum:
+        raise FileCorruptionError(f"Checksum mismatch for {file_path}. The file might be corrupt.")
+    
+    # Load the DataFrame
+    return pd.read_parquet(path=file_path)
+
 def save_json_plot(json_str, plot_save_path: Path) -> None:
     """
     Saves a JSON string as a Zstandard-compressed file and generates a SHA256 checksum for integrity verification.
