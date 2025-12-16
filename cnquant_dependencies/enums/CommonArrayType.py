@@ -98,7 +98,7 @@ class CommonArrayType(Enum):
         return cast(Sequence[str], [member.value for member in cls])
 
     @classmethod
-    def get_member_from_string(cls, value: str) -> "CommonArrayType":
+    def get_member_from_string(cls, value: str) -> "CommonArrayType | None":
         f"""Returns the {cls.__name__} enum member corresponding to the given value string.
         
         Args:
@@ -118,7 +118,7 @@ class CommonArrayType(Enum):
                     if member.value.lower() == value.lower():
                         return member
                 else:
-                    raise AttributeError(f"{value} is not a valid name for {cls.__name__}")
+                    return None
             except AttributeError:
                 valid_values = [member.value for member in cls]
                 valid_names = [member.name for member in cls]

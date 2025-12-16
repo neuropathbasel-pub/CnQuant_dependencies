@@ -1,6 +1,6 @@
 [project]
 name = "cnquant_dependencies"
-version = "0.13.3"
+version = "0.13.4"
 description = "This repository contains the dependencies shared by more than one of the CnQuant applications"
 readme = "README.md"
 requires-python = ">=3.10, <3.13"
