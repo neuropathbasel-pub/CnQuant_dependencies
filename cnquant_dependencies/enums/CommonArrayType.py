@@ -114,7 +114,11 @@ class CommonArrayType(Enum):
             return cls(value)
         except ValueError:
             try:
-                return getattr(cls, value.upper())  # Fallback to by name
+                for member in cls:
+                    if member.value.lower() == value.lower():
+                        return member
+                else:
+                    raise AttributeError(f"{value} is not a valid name for {cls.__name__}")
             except AttributeError:
                 valid_values = [member.value for member in cls]
                 valid_names = [member.name for member in cls]
@@ -136,8 +140,10 @@ class CommonArrayType(Enum):
 if __name__ == "__main__":
     # print(CommonArrayType.get_array_types(convert_from_to=CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K, verbose=True))  # List of ArrayType
     # print(', '.join(CommonArrayType.members_list()))
-    # print(CommonArrayType.get_member_from_string(value="EPIC_v2_EPIC_v1_HM450_to_MSA48"))
-    print(CommonArrayType.available_downsizing_targets("450k"))
+    print(CommonArrayType.get_member_from_string(value=CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K.value))
+    # print(CommonArrayType.available_downsizing_targets("450k"))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.members_list()))
     # print(CommonArrayType.value_to_key_mapping(CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K))
     # print(CommonArrayType.get_array_types(CommonArrayType.EPIC_v2_EPIC_v1_HM450_to_MSA48))
+    print(CommonArrayType.get_member_from_string(CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K.value.upper()))
+    print(CommonArrayType.get_member_from_string(CommonArrayType.EPIC_v2_EPIC_v1_to_HM450K.value.lower()))
