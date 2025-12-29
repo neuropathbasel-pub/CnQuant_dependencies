@@ -62,7 +62,7 @@ def load_parquet_with_checksum_verification(file_path: Path) -> pl.DataFrame:
 
     if actual_checksum != expected_checksum:
         raise FileCorruptionError(
-            f"Checksum mismatch for {file_path}. The file might be corrupt."
+            file_path=f"Checksum mismatch for {file_path}. The file might be corrupt."
         )
 
     # Load the DataFrame
@@ -322,7 +322,7 @@ def load_zstd_json_plot_to_dict(file_path: Path) -> dict:
 
     if actual_checksum != expected_checksum:
         raise FileCorruptionError(
-            f"Checksum mismatch for {file_path}. The file may be corrupt."
+            file_path=f"Checksum mismatch for {file_path}. The file may be corrupt."
         )
 
     return data
