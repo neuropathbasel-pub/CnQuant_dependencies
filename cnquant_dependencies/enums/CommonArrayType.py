@@ -93,7 +93,12 @@ class CommonArrayType(Enum):
         return {at.value: at.name for at in common_array_types}
     
     @classmethod
-    def members_list(cls) -> Sequence[str]:
+    def members_list(cls) -> list["CommonArrayType"]:
+        """Returns a list of all CommonArrayType enum members."""
+        return [member for member in cls]
+
+    @classmethod
+    def get_members(cls) -> Sequence[str]:
         """Returns a sequence of the string values of all CommonArrayType enum members."""
         return cast(Sequence[str], [member.value for member in cls])
 
