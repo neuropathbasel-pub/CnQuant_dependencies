@@ -28,11 +28,12 @@ class StatusJson:
         array_type (Optional[str]): Type of the array used.
         red_idat_size (float): Size of the red IDAT file in MB.
         green_idat_size (float): Size of the green IDAT file in MB.
+        exception_name (Optional[str]): The name of the exception, if any.
         failure_reason (Optional[str]): Reason for failure, if any.
         completion_status (Optional[bool]): Whether the analysis completed successfully.
         raw_data_parsing_time (Optional[float]): Time taken for raw data parsing in seconds.
         data_analysis_timing (Optional[float]): Time taken for data analysis in seconds.
-        data_downsized (bool): Whether the data was downsized.
+        downsize_to (Optional[str]): The downsize option used.
         logger (logging.Logger): Logger instance for logging messages (defaults to a basic logger if not provided).
     """
     def __init__(
@@ -47,6 +48,7 @@ class StatusJson:
         array_type: Optional[str] = None,
         red_idat_size: float = 0,
         green_idat_size: float = 0,
+        exception_name: Optional[str] = None,
         failure_reason: Optional[str] = None,
         completion_status: Optional[bool] = None,
         raw_data_parsing_time: Optional[float] = None,
@@ -68,11 +70,12 @@ class StatusJson:
             array_type (Optional[str]): Type of the array used. Defaults to None.
             red_idat_size (float): Size of the red IDAT file in MB. Defaults to 0.
             green_idat_size (float): Size of the green IDAT file in MB. Defaults to 0.
+            exception_name (Optional[str]): The name of the exception, if any. Defaults to None.
             failure_reason (Optional[str]): Reason for failure, if any. Defaults to None.
             completion_status (Optional[bool]): Whether the analysis completed successfully. Defaults to None.
             raw_data_parsing_time (Optional[float]): Time taken for raw data parsing in seconds. Defaults to None.
             data_analysis_timing (Optional[float]): Time taken for data analysis in seconds. Defaults to None.
-            data_downsized (bool): Whether the data was downsized. Defaults to False.
+            downsize_to (str): The downsize option used. Defaults to "NO_DOWNSIZING".
             logger (Optional[logging.Logger]): Logger instance for logging. Defaults to a basic logger if not provided.
         """
         self.logger = logger or logging.getLogger(name=__name__)
@@ -84,6 +87,7 @@ class StatusJson:
         self.array_type: Optional[str] = array_type
         self.red_idat_size: float = red_idat_size
         self.green_idat_size: float = green_idat_size
+        self.exception_name: Optional[str] = exception_name
         self.failure_reason: Optional[str] = failure_reason
         self.data_analysis_timing: Optional[float] = data_analysis_timing
         self.reference_sentrix_ids: Optional[str] = reference_sentrix_ids
@@ -104,6 +108,7 @@ class StatusJson:
             "analysis_completed_successfully": str(self.completion_status) if self.completion_status is not None else "False",
             "sentrix_id": self.sentrix_id,
             "array_type": str(self.array_type) if self.array_type is not None else "N/A",
+            "exception_name": str(self.exception_name) if self.exception_name is not None else "N/A",
             "failure_reason": self.failure_reason if self.failure_reason is not None else "N/A",
             "timestamp": str(time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime())),
             "analysis_settings": {
@@ -182,9 +187,10 @@ def load_analysis_status_json(status_json_path: str | Path, logger = logging.get
     
     Args:
         status_json_path (str | Path): The path to the JSON file to load.
+        logger (logging.Logger, optional): Logger for recording errors. Defaults to the module logger.
     
     Returns:
-        dict[str, Any]: The parsed JSON data as a dictionary. Returns an empty dict if the file does not exist.
+        dict[str, str | dict[str, str]]: The parsed JSON data as a dictionary. Returns an empty dict if the file does not exist.
     
     Raises:
         ValueError: If the file exists but contains invalid JSON or is not a dictionary.
@@ -222,6 +228,7 @@ def check_if_previous_analysis_was_successful(
 
     Args:
         status_json_path (str | Path): The path to the JSON file containing the analysis status.
+        logger (logging.Logger, optional): Logger for recording errors. Defaults to the module logger.
         success_status_string (str): The key in the JSON to check for success status. Defaults to "analysis_completed_successfully".
 
     Returns:
@@ -255,18 +262,18 @@ def get_array_type(
     logger = logging.getLogger(name=__name__)
 ) -> str:
     """
-    Checks if a previous analysis was successful by reading a status JSON file.
+    Retrieves the array type from a status JSON file.
 
-    This function verifies the existence of the specified JSON file and parses it to determine
-    if the analysis completed successfully. It looks for the key "analysis_completed_successfully"
-    in the JSON and checks if its value is "true" (case-insensitive). If the file does not exist
-    or the status is not "true", it returns False.
+    This function reads the specified JSON file and extracts the "array_type" field,
+    converting it to lowercase. If the file does not exist or the field is missing,
+    it returns "N/A".
 
     Args:
         status_json_path (str | Path): The path to the JSON file containing the analysis status.
+        logger (logging.Logger, optional): Logger for recording errors. Defaults to the module logger.
 
     Returns:
-        bool: True if the analysis was successful, False otherwise.
+        str: The array type in lowercase, or "N/A" if not found or on error.
 
     Raises:
         PermissionError: If there is a permission issue reading the file.
