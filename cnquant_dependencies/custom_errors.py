@@ -68,6 +68,13 @@ class IdatSizeNotEqual(Exception):
 
 class IdatPairNotFound(Exception):
     """Reports errors related to missing idat pair files"""
-    def __init__(self, sentrix_id: str):
-        self.message = f"IDAT pair files for sentrix ID: {sentrix_id} not found."
+    def __init__(self, sentrix_id: str, red_idat_exists: bool, green_idat_exists: bool):
+        if not red_idat_exists and not green_idat_exists:
+            self.message = f"Both IDAT pair files for sentrix ID: {sentrix_id} not found."
+        elif not red_idat_exists:
+            self.message = f"Red IDAT file for sentrix ID: {sentrix_id} not found."
+        elif not green_idat_exists:
+            self.message = f"Green IDAT file for sentrix ID: {sentrix_id} not found."
+        else:
+            self.message = f"There is a bug in the IdatPairNotFound exception. Both IDAT pair files for sentrix ID: {sentrix_id} were found."
         super().__init__(self.message)
