@@ -65,3 +65,9 @@ class IdatSizeNotEqual(Exception):
     def __init__(self, sentrix_id: str):
         self.message = f"IDAT file sizes for sentrix ID: {sentrix_id} are not equal."
         super().__init__(self.message)
+
+class IdatPairNotFound(Exception):
+    """Reports errors related to missing idat pair files"""
+    def __init__(self, sentrix_id: str):
+        self.message = f"IDAT pair files for sentrix ID: {sentrix_id} not found."
+        super().__init__(self.message)
