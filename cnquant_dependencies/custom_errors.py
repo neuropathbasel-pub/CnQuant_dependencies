@@ -59,3 +59,9 @@ class IdatSizeBelowThreshold(Exception):
         else:
             self.message = "Insufficient information provided to determine IDAT file size status."
         super().__init__(self.message)
+
+class IdatSizeNotEqual(Exception):
+    """Reports errors related to IDAT file sizes [MB] not being equal"""
+    def __init__(self, sentrix_id: str):
+        self.message = f"IDAT file sizes for sentrix ID: {sentrix_id} are not equal."
+        super().__init__(self.message)
