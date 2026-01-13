@@ -65,7 +65,7 @@ class CommonArrayType(Enum):
         if array_type in cls.get_array_types(convert_from_to=cls.EPIC_v2_EPIC_v1_to_HM450K):
             return [
                 cls.EPIC_v2_EPIC_v1_to_HM450K,
-                cls.EPIC_v2_EPIC_v1_HM450_to_MSA48,
+                # cls.EPIC_v2_EPIC_v1_HM450_to_MSA48,
             ]
         elif array_type == ArrayType.ILLUMINA_MSA48:
             return [
