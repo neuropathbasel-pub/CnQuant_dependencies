@@ -62,9 +62,10 @@ class CommonArrayType(Enum):
         if array_type not in ArrayType.valid_array_types():
             raise ValueError(f"Unknown ArrayType value: {array_type}")
         
-        if array_type in cls.get_array_types(cls.EPIC_v2_EPIC_v1_to_HM450K):
+        if array_type in cls.get_array_types(convert_from_to=cls.EPIC_v2_EPIC_v1_to_HM450K):
             return [
                 cls.EPIC_v2_EPIC_v1_to_HM450K,
+                cls.EPIC_v2_EPIC_v1_HM450_to_MSA48,
             ]
         elif array_type == ArrayType.ILLUMINA_MSA48:
             return [
