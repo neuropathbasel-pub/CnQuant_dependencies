@@ -1,5 +1,6 @@
 import os
 import logging
+import numpy as np
 from pathlib import Path
 from typing import Optional, Union
 from collections import defaultdict
@@ -9,6 +10,12 @@ from cnquant_dependencies.models.StatusJson import (
     get_status_json_path,
 )
 from cnquant_dependencies.bin_settings_functions import make_bin_settings_string
+
+ENDING_CONTROL_PROBES: str = "_control-probes"
+ENDING_GRN = "_Grn.idat"
+ENDING_RED = "_Red.idat"
+ENDING_GZ = ".gz"
+ENDING_SUFFIXES = ("_Grn.idat", "_Red.idat", "_Grn.idat.gz", "_Red.idat.gz")
 
 def get_sentrix_ids(idat_directory: Path) -> list[str]:
     """
@@ -403,3 +410,107 @@ def get_combined_plot_path(
     )
 
     return plot_save_path
+
+def is_valid_idat_basepath(basepath):
+    """Checks if the given basepath(s) point to valid IDAT files."""
+    if not isinstance(basepath, list):
+        basepath = [basepath]
+    basepath = [str(x) for x in basepath]
+    return all(
+        (os.path.exists(x + ENDING_GRN) or os.path.exists(x + ENDING_GRN + ENDING_GZ))
+        and (
+            os.path.exists(x + ENDING_RED) or os.path.exists(x + ENDING_RED + ENDING_GZ)
+        )
+        for x in basepath
+    )
+
+def idat_basepaths(files: list[str], only_valid=False):
+    """Returns unique basepaths from IDAT files or directory.
+
+    This function processes a list of IDAT files or a directory containing IDAT
+    files and returns their basepaths by removing the file endings. The
+    function ensures that there are no duplicate basepaths in the returned list
+    and maintains the order of the files as they appear in the input.
+
+    Args:
+        files (path or list): A file or directory path or a list of file paths.
+        only_valid (bool): If True, only returns basepaths that point to valid
+            IDAT file pairs. Defaults is 'False'.
+
+    Returns:
+        list: A list of unique basepaths corresponding to the provided IDAT
+            files. If a directory is provided, all IDAT files are recursively
+            considered.
+
+    Example:
+        >>> idat_basepaths("/path/to/dir")
+        [PosixPath('/path/to/dir/file1'), PosixPath('/path/to/dir/file2')]
+
+        >>> idat_basepaths(["/path1/file1_Grn.idat", "/path2/file2_Red.idat"])
+        [PosixPath('/path1/file1'), PosixPath('/path2/file2')]
+
+        >>> idat_basepaths("/path/to/idat/file_Grn.idat.gz")
+        [PosixPath('/path/to/idat/file')]
+    """
+
+    def get_idat_files(file_or_dir):
+        path = os.path.expanduser(file_or_dir)
+        # If path is dir take all files in it
+        if os.path.isdir(path):
+            for dirpath, _, filenames in os.walk(path, followlinks=True):
+                for filename in filenames:
+                    if filename.endswith(ENDING_SUFFIXES):
+                        yield os.path.join(dirpath, filename)
+        else:
+            yield path
+
+    def strip_suffix(file_path):
+        for suffix in ENDING_SUFFIXES:
+            if file_path.endswith(suffix):
+                return file_path[: -len(suffix)]
+        return file_path
+
+    if not isinstance(files, list):
+        files = [files]
+    _files = [
+        strip_suffix(idat_file)
+        for file_or_dir in files
+        for idat_file in get_idat_files(file_or_dir)
+    ]
+    # Remove duplicates, keep ordering
+    unique_basepaths_dict = dict.fromkeys(_files)
+    if only_valid:
+        return [
+            Path(base) for base in unique_basepaths_dict if is_valid_idat_basepath(base)
+        ]
+    return [Path(base) for base in unique_basepaths_dict]
+
+def idat_paths_from_basenames(basenames):
+    """Returns paths to green and red IDAT files.
+
+    Args:
+        basenames (list): List of basepaths for IDAT files.
+
+    Returns:
+        tuple: Paths to green and red IDAT files.
+
+    Raises:
+        FileNotFoundError: If any IDAT file is not found.
+    """
+    grn_idat_files = np.array([Path(str(name) + ENDING_GRN) for name in basenames])
+    red_idat_files = np.array([Path(str(name) + ENDING_RED) for name in basenames])
+
+    def check_and_fix(files):
+        not_existing = [i for i, path in enumerate(files) if not path.exists()]
+        files[not_existing] = [
+            x.parent / (x.name + ENDING_GZ) for x in files[not_existing]
+        ]
+        return next((x for x in files[not_existing] if not x.exists()), None)
+
+    not_found = check_and_fix(grn_idat_files)
+    not_found = check_and_fix(red_idat_files) if not_found is None else not_found
+    if not_found is not None:
+        idat_file = str(not_found).replace(ENDING_GZ, "")
+        msg = f"IDAT file not found: {idat_file}."
+        raise FileNotFoundError(msg)
+    return grn_idat_files, red_idat_files
