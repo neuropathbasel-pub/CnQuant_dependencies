@@ -34,7 +34,7 @@ class StatusJson:
         raw_data_parsing_time (Optional[float]): Time taken for raw data parsing in seconds.
         data_analysis_timing (Optional[float]): Time taken for data analysis in seconds.
         downsize_to (Optional[str]): The downsize option used.
-        logger (logging.Logger): Logger instance for logging messages (defaults to a basic logger if not provided).
+        logger: logging.Logger): Logger instance for logging messages (defaults to a basic logger if not provided).
     """
     def __init__(
         self,
@@ -54,7 +54,7 @@ class StatusJson:
         raw_data_parsing_time: Optional[float] = None,
         data_analysis_timing: Optional[float] = None,
         downsize_to: str = "NO_DOWNSIZING",
-        logger: Optional[logging.Logger] = None,
+        logger: logging.Logger = logging.getLogger(name=__name__),
     ):
         """
         Initializes the StatusJson instance with analysis metadata.
@@ -78,7 +78,7 @@ class StatusJson:
             downsize_to (str): The downsize option used. Defaults to "NO_DOWNSIZING".
             logger (Optional[logging.Logger]): Logger instance for logging. Defaults to a basic logger if not provided.
         """
-        self.logger = logger or logging.getLogger(name=__name__)
+        self.logger: logging.Logger = logger
         self.idat_directory: str | Path = idat_directory
         self.sentrix_id: str = sentrix_id
         self.preprocessing_method: str = preprocessing_method
