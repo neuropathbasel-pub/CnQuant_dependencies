@@ -4,14 +4,16 @@ import io
 import os
 import numpy as np
 from enum import IntEnum, unique
-from pathlib import PurePath
+from pathlib import PurePath, Path
+from numpy.typing import NDArray
+from typing import Any, Union
 
 __all__ = ["IdatParser"]
 
-DEFAULT_IDAT_VERSION = 3
-DEFAULT_IDAT_FILE_ID = "IDAT"
+DEFAULT_IDAT_VERSION: int = 3
+DEFAULT_IDAT_FILE_ID: str = "IDAT"
 
-def is_file_like(obj):
+def is_file_like(obj: Any) -> bool:
     """Check if the object is a file-like object.
 
     For objects to be considered file-like, they must be an iterator AND have
@@ -33,7 +35,7 @@ def is_file_like(obj):
     """
     return all(hasattr(obj, attr) for attr in ("read", "write", "__iter__"))
 
-def get_file_object(filepath_or_buffer):
+def get_file_object(filepath_or_buffer: Union[str, Path, Any]):
     """Returns a file-like object for the given input.
 
     Args:
@@ -43,57 +45,57 @@ def get_file_object(filepath_or_buffer):
     Returns:
         file-like object: A file-like object for reading the file.
     """
-    if is_file_like(filepath_or_buffer):
+    if is_file_like(obj=filepath_or_buffer):
         return filepath_or_buffer
 
     if PurePath(filepath_or_buffer).suffix == ".gz":
-        return gzip.open(filepath_or_buffer, "rb")
+        return gzip.open(filename=filepath_or_buffer, mode="rb")
 
-    return open(filepath_or_buffer, "rb")
-
-
-def read_byte(infile):
-    return int.from_bytes(infile.read(1), byteorder="little", signed=False)
+    return open(file=filepath_or_buffer, mode="rb")
 
 
-def read_short(infile):
-    return int.from_bytes(infile.read(2), byteorder="little", signed=False)
+def read_byte(infile) -> int:
+    return int.from_bytes(bytes=infile.read(1), byteorder="little", signed=False)
 
 
-def read_int(infile):
-    return int.from_bytes(infile.read(4), byteorder="little", signed=True)
+def read_short(infile) -> int:
+    return int.from_bytes(bytes=infile.read(2), byteorder="little", signed=False)
 
 
-def read_long(infile):
-    return int.from_bytes(infile.read(8), byteorder="little", signed=True)
+def read_int(infile) -> int:
+    return int.from_bytes(bytes=infile.read(4), byteorder="little", signed=True)
 
 
-def read_char(infile, num_bytes):
+def read_long(infile) -> int:
+    return int.from_bytes(bytes=infile.read(8), byteorder="little", signed=True)
+
+
+def read_char(infile, num_bytes) -> str:
     return infile.read(num_bytes).decode("utf-8")
 
 
-def read_string(infile):
-    num_bytes = read_byte(infile)
-    num_chars = num_bytes % 128
-    shift = 0
+def read_string(infile) -> str:
+    num_bytes: int = read_byte(infile=infile)
+    num_chars: int = num_bytes % 128
+    shift: int = 0
     while num_bytes // 128 == 1:
-        num_bytes = read_byte(infile)
+        num_bytes = read_byte(infile=infile)
         shift += 7
         offset = (num_bytes % 128) * (2**shift)
         num_chars += offset
-    return read_char(infile, num_chars)
+    return read_char(infile=infile, num_bytes=num_chars)
 
 
-def read_array(infile, dtype, n):
-    dtype = np.dtype(dtype)
-    total_size = dtype.itemsize * n
-    alldata = infile.read(total_size)
+def read_array(infile, dtype, n) -> NDArray[Any]:
+    _dtype: np.dtype = np.dtype(dtype)
+    total_size: int = _dtype.itemsize * n
+    alldata: bytes = infile.read(total_size)
 
     if len(alldata) != total_size:
-        msg = "End of file reached before number of results parsed"
+        msg: str = "End of file reached before number of results parsed"
         raise EOFError(msg)
 
-    return np.frombuffer(alldata, dtype)
+    return np.frombuffer(buffer=alldata, dtype=_dtype)
 
 
 @unique
@@ -121,7 +123,7 @@ class IdatSectionCode(IntEnum):
     NUM_SNPS_READ = 1000
 
 
-def _get_file_size(file_like):
+def _get_file_size(file_like) -> int:
     """Get the size of a file-like object."""
     # Check if the file-like object has a fileno method
     if isinstance(file_like, (io.BufferedReader, gzip.GzipFile)):
@@ -158,7 +160,7 @@ class IdatParser:
 
     def __init__(
         self,
-        file_path,
+        file_path: Union[str, Path],
         *,
         intensity_only=False,
         array_type_only=False,
@@ -168,13 +170,13 @@ class IdatParser:
         self.array_type_only = array_type_only
         self._file_path = file_path
 
-        with get_file_object(file_path) as idat_file:
-            self.file_size = _get_file_size(idat_file)
-            self._parse_header(idat_file)
-            self._parse_body(idat_file)
+        with get_file_object(filepath_or_buffer=file_path) as idat_file:
+            self.file_size = _get_file_size(file_like=idat_file)
+            self._parse_header(idat_file=idat_file)
+            self._parse_body(idat_file=idat_file)
 
     def _parse_header(self, idat_file):
-        file_type = read_char(idat_file, len(DEFAULT_IDAT_FILE_ID))
+        file_type: str = read_char(infile=idat_file, num_bytes=len(DEFAULT_IDAT_FILE_ID))
         # Assert file is indeed IDAT format
         if file_type != DEFAULT_IDAT_FILE_ID:
             msg = (
@@ -183,7 +185,7 @@ class IdatParser:
             )
             raise ValueError(msg)
 
-        idat_version = read_long(idat_file)
+        idat_version: int = read_long(idat_file)
 
         # Assert correct IDAT file version
         if idat_version != DEFAULT_IDAT_VERSION:
@@ -193,9 +195,9 @@ class IdatParser:
             )
             raise ValueError(msg)
 
-        self.num_fields = read_int(idat_file)
+        self.num_fields: int = read_int(idat_file)
 
-        self.offsets = {
+        self.offsets: dict[int,int] = {
             read_short(idat_file): read_long(idat_file)
             for _ in range(self.num_fields)
         }
@@ -226,11 +228,11 @@ class IdatParser:
         self.n_beads = read_array(idat_file, "<u1", self.n_snps_read)
 
         seek_to_section(IdatSectionCode.MID_BLOCK)
-        n_mid_block = read_int(idat_file)
-        self.mid_block = read_array(idat_file, "<i4", n_mid_block)
+        n_mid_block: int = read_int(idat_file)
+        self.mid_block: NDArray[Any] = read_array(idat_file, "<i4", n_mid_block)
 
         seek_to_section(IdatSectionCode.RUN_INFO)
-        runinfo_entry_count = read_int(idat_file)
+        runinfo_entry_count: int = read_int(idat_file)
 
         self.run_info = [None] * runinfo_entry_count
         for i in range(runinfo_entry_count):
@@ -243,40 +245,40 @@ class IdatParser:
             ]
 
         seek_to_section(IdatSectionCode.RED_GREEN)
-        self.red_green = read_int(idat_file)
+        self.red_green: int = read_int(idat_file)
 
         seek_to_section(IdatSectionCode.MOSTLY_NULL)
-        self.mostly_null = read_string(idat_file)
+        self.mostly_null: str = read_string(idat_file)
 
         seek_to_section(IdatSectionCode.BARCODE)
-        self.barcode = read_string(idat_file)
+        self.barcode: str = read_string(idat_file)
 
         seek_to_section(IdatSectionCode.CHIP_TYPE)
-        self.chip_type = read_string(idat_file)
+        self.chip_type: str = read_string(idat_file)
 
         seek_to_section(IdatSectionCode.MOSTLY_A)
-        self.mostly_a = read_string(idat_file)
+        self.mostly_a: str = read_string(idat_file)
 
         seek_to_section(IdatSectionCode.UNKNOWN_1)
-        self.unknown_1 = read_string(idat_file)
+        self.unknown_1: str = read_string(idat_file)
 
         seek_to_section(IdatSectionCode.UNKNOWN_2)
-        self.unknown_2 = read_string(idat_file)
+        self.unknown_2: str = read_string(idat_file)
 
         seek_to_section(IdatSectionCode.UNKNOWN_3)
-        self.unknown_3 = read_string(idat_file)
+        self.unknown_3: str = read_string(idat_file)
 
         seek_to_section(IdatSectionCode.UNKNOWN_4)
-        self.unknown_4 = read_string(idat_file)
+        self.unknown_4: str = read_string(idat_file)
 
         seek_to_section(IdatSectionCode.UNKNOWN_5)
-        self.unknown_5 = read_string(idat_file)
+        self.unknown_5: str = read_string(idat_file)
 
         seek_to_section(IdatSectionCode.UNKNOWN_6)
-        self.unknown_6 = read_string(idat_file)
+        self.unknown_6: str = read_string(idat_file)
 
         seek_to_section(IdatSectionCode.UNKNOWN_7)
-        self.unknown_7 = read_string(idat_file)
+        self.unknown_7: str = read_string(idat_file)
 
     def __repr__(self):
         with np.printoptions(edgeitems=2):
